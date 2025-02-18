@@ -1,0 +1,9 @@
+Connect Command: ssh -i thunder_buddies.pem ec2-user@18.188.102.128
+
+Kill Command: pkill -f app.py
+
+Start Command: python3 app.py
+
+Edit Command: nano app.py
+
+Nano Save and Quit Command: ctrl + O, ctrl + X
