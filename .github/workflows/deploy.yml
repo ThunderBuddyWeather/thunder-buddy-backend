@@ -1,0 +1,32 @@
+name: Deploy to EC2 via SSH
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - feature/github-actions-aws
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+
+      - name: Deploy to EC2 Using SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}           # Your EC2 public IP or hostname
+          username: ec2-user                      # Adjust based on your AMI/user
+          key: ${{ secrets.EC2_SSH_KEY }}           # Your SSH private key
+          script: |
+            echo "Deploying to EC2: ${PWD}"
