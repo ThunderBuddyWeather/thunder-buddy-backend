@@ -28,4 +28,5 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}           # Your SSH private key
           script: |
             echo "Deploying to EC2: ${PWD}"
+            echo "Current branch: ${{ github.ref }}"
             git pull
