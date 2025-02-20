@@ -1,0 +1,86 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - feature/github-actions-aws
+  pull_request:
+    branches:
+      - main
+      - develop
+      - feature/github-actions-aws
+  workflow_dispatch:
+
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+    name: Build and Push Docker Image
+    steps:
+      # 1. Checkout the repository code.
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
+
+      # 2. Run Python linting to check code quality.
+      - name: Run Python Linting
+        run: |
+          pip install flake8
+          flake8 .
+
+      # (Optional) Check AWS identity if needed.
+      - name: Check AWS Identity (Optional)
+        run: aws sts get-caller-identity || echo "Skipping AWS identity check"
+
+      # 3. Log in to Docker Hub using your Docker Hub credentials.
+      - name: Login to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login --username ${{ secrets.DOCKER_USERNAME }} --password-stdin
+
+      # 4. Build the Docker image using your Dockerfile.
+      - name: Build Docker Image
+        run: |
+          docker build -t thunder-buddy .
+
+      # 5. Tag the Docker image with your Docker Hub repository name.
+      - name: Tag Docker Image
+        run: |
+          docker tag thunder-buddy:latest ${{ secrets.DOCKER_USERNAME }}/thunder-buddy:latest
+
+      # 6. Push the Docker image to Docker Hub.
+      - name: Push Docker Image to Docker Hub
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/thunder-buddy:latest
+
+  deploy:
+    needs: build_and_push
+    runs-on: ubuntu-latest
+    name: Deploy Docker Container on EC2
+    steps:
+      # 1. (Optional) Checkout code for logging/debugging purposes.
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
+
+      # 2. Deploy the Docker container on your EC2 instance via SSH.
+      - name: Deploy Docker Container on EC2
+        uses: appleboy/ssh-action@v0.1.9
+        with:
+          host: ${{ secrets.EC2_HOST }}           # Your EC2 public IP or hostname
+          username: ec2-user                      # Adjust based on your instance's user
+          key: ${{ secrets.EC2_SSH_KEY }}           # Your SSH private key stored as a secret
+          script: |
+            echo "Pulling the latest Docker image from Docker Hub..."
+            docker pull ${{ secrets.DOCKER_USERNAME }}/thunder-buddy:latest
+            
+            echo "Stopping and removing the existing container if it exists..."
+            docker rm -f thunder-buddy || true
+            
+            echo "Starting the new container..."
+            docker run -d -p 5000:5000 --name thunder-buddy ${{ secrets.DOCKER_USERNAME }}/thunder-buddy:latest
+            
+            echo "Deployment complete. Current running containers:"
+            docker ps
