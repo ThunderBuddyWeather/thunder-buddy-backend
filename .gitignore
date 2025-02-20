@@ -1,0 +1,74 @@
+# Editor directories and files
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+.idea/
+*.swp
+*.swo
+
+# Python environments
+venv/
+ENV/
+env/
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+build/
+dist/
+pip-wheel-metadata/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs and databases
+*.log
+*.sqlite
+*.db
+
+# System files
+.DS_Store
+Thumbs.db
+
+# OS-specific files
+## Windows
+[Dd]esktop.ini
+Thumbs.db
+$RECYCLE.BIN/
+*.lnk
+
+## macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+.Spotlight-V100/
+.TemporaryItems/
+.Trashes/
+
+## Linux
+.directory
+*~
+.Trash-*
+.nfs*
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Database
+*.sql
+pg_data/
+postgresql_*.log
+
+# Flask
+instance/
+debug.log
+
+# Temporary files
+/tmp/*.sock 

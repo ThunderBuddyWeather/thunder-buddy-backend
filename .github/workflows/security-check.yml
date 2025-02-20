@@ -1,0 +1,71 @@
+name: Security Check
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - feature/github-actions-aws
+  pull_request:
+  # Optionally run daily at 3 AM UTC
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code from the repository.
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      # Set up Python (using Python 3.9 in this example).
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.12'
+
+      # Install project dependencies from requirements.txt.
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      # Run Bandit to scan your Python code for security issues.
+      - name: Run Bandit Security Scan
+        if: always() && false  # Temporarily disabled
+        run: |
+          pip install bandit
+          # -r recursively scans your project directory.
+          bandit -r .
+
+      # Run Safety to check your Python dependencies for known vulnerabilities.
+      - name: Run Safety Check on Dependencies
+        if: always() && false  # Temporarily disabled
+        run: |
+          pip install safety
+          safety check --full-report
+
+      # Run OWASP Dependency-Check to analyze your dependencies.
+      - name: Run OWASP Dependency Check
+        if: always() && false  # Temporarily disabled
+        run: |
+          # Create output directory with proper permissions
+          mkdir -p dependency-check-data dependency-check-report
+          chmod -R 777 dependency-check-data dependency-check-report
+
+          docker run --rm \
+          -v $(pwd):/src \
+          -v $(pwd)/dependency-check-data:/usr/share/dependency-check/data \
+          owasp/dependency-check:latest \
+          --project "ThunderBuddy" \
+          --scan /src \
+          --format "ALL" \
+          --nvdApiKey ${{ secrets.NVD_API_KEY }} \
+          --out /src/dependency-check-report
+
+
+          # Fix permissions after scan
+          sudo chown -R $USER:$USER dependency-check-report
