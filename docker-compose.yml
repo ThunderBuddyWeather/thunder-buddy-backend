@@ -1,0 +1,52 @@
+---
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: thunder-buddy-db
+    env_file:
+      - ${ENV_FILE:-.env.local}
+    environment:
+      POSTGRES_DB: thunderbuddy
+      POSTGRES_USER: thunderbuddy
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - thunder_buddy_postgres_15:/var/lib/postgresql/data
+    networks:
+      - thunder-buddy-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U thunderbuddy -d thunderbuddy"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    image: ${DOCKER_USERNAME}/thunder-buddy:latest
+    container_name: thunder-buddy
+    env_file:
+      - ${ENV_FILE:-.env.local}
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=postgresql://thunderbuddy:${DB_PASSWORD}@db:5432/thunderbuddy
+      - DB_PASSWORD=${DB_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - thunder-buddy-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  thunder_buddy_postgres_15:
+    name: thunder_buddy_postgres_15
+
+networks:
+  thunder-buddy-network:
+    name: thunder-buddy-network
