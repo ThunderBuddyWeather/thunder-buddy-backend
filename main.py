@@ -47,17 +47,20 @@ def get_local_weather():
 
     try:
         response = requests.get(weatherbit_url, params=params, timeout=timeout)
-
+        
+        # Handle non-200 status codes
         if response.status_code != 200:
             return jsonify({"error": "Failed to fetch weather data"}), response.status_code
-
-        return jsonify(response.json())
-    except TimeoutError:
+        
+        try:
+            return jsonify(response.json())
+        except ValueError:  # This catches JSON decode errors
+            return jsonify({"error": "Invalid response format"}), 500
+            
+    except requests.exceptions.Timeout:
         return jsonify({"error": "Request timed out"}), 500
-    except requests.RequestException:
+    except requests.exceptions.RequestException:
         return jsonify({"error": "API request failed"}), 500
-    except json.JSONDecodeError:
-        return jsonify({"error": "Invalid response format"}), 500
 
 
 if __name__ == "__main__":

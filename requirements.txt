@@ -1,9 +1,9 @@
 flask==3.1.0
 python-dotenv==1.0.1
 requests==2.32.3
-pytest==8.3.4
-pytest-mock==3.14.0
-pytest-cov==6.0.0
+pytest>=8.0.0
+pytest-mock>=3.14.0
+pytest-cov>=6.0.0
 faker==36.1.1
 psycopg2-binary==2.9.9
 SQLAlchemy==2.0.27

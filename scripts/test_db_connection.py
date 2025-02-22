@@ -6,10 +6,12 @@ import sys
 # pylint: disable=import-error
 import psycopg2  # type: ignore
 
-def test_connection():
-    """Test database connection using environment variables"""
+def test_connection(database_url=None):
+    """Test database connection using environment variables or provided URL"""
     try:
-        conn = psycopg2.connect(os.environ['DATABASE_URL'])
+        # Use provided URL or fall back to environment variable
+        conn_url = database_url or os.environ['DATABASE_URL']
+        conn = psycopg2.connect(conn_url)
         cur = conn.cursor()
         cur.execute('SELECT 1')
         cur.close()
