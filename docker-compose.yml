@@ -6,9 +6,9 @@ services:
     env_file:
       - ${ENV_FILE:-.env.local}
     environment:
-      POSTGRES_DB: db-thunderbuddy
+      POSTGRES_DB: thunderbuddy
       POSTGRES_USER: thunderbuddy
-      POSTGRES_PASSWORD: localdev
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -16,7 +16,7 @@ services:
     networks:
       - thunder-buddy-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U thunderbuddy -d db-thunderbuddy"]
+      test: ["CMD-SHELL", "pg_isready -U thunderbuddy -d thunderbuddy"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -29,12 +29,19 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - DATABASE_URL=postgresql://thunderbuddy:localdev@db:5432/thunderbuddy
+      - DATABASE_URL=postgresql://thunderbuddy:${DB_PASSWORD}@db:5432/thunderbuddy
+      - DB_PASSWORD=${DB_PASSWORD}
     depends_on:
       db:
         condition: service_healthy
     networks:
       - thunder-buddy-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
 volumes:
   thunder_buddy_postgres_15:

@@ -2,6 +2,9 @@
 # The slim version reduces the overall image size.
 FROM python:3.12-slim
 
+# Install curl and wget for healthchecks
+RUN apt-get update && apt-get install -y curl wget && rm -rf /var/lib/apt/lists/*
+
 # Set the working directory inside the container.
 # All subsequent commands run within this directory.
 WORKDIR /app
@@ -22,16 +25,13 @@ COPY scripts/ scripts/
 # Expose port 5000 so that the container listens on this port at runtime.
 EXPOSE 5000
 
-# Add build argument for database URL
-ARG DATABASE_URL
-ENV DATABASE_URL=${DATABASE_URL}
-
-# Add additional environment variables
-ENV DB_HOST=db
-ENV DB_PORT=5432
-ENV DB_NAME=thunderbuddy
-ENV DB_USER=thunderbuddy
-ENV DB_PASSWORD=localdev
+# Environment variables
+ENV DB_HOST=db \
+  DB_PORT=5432 \
+  DB_NAME=thunderbuddy \
+  DB_USERNAME=thunderbuddy \
+  DB_PASSWORD=localdev \
+  DATABASE_URL=postgresql://thunderbuddy:localdev@db:5432/thunderbuddy
 
 # Set the container's entrypoint to run your application.
 # ENTRYPOINT enforces that the command will always be run.

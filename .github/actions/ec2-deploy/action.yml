@@ -104,6 +104,7 @@ runs:
         script_stop: true
         envs: |
           DOCKER_USERNAME=${{ inputs.docker_username }}
+          DB_PASSWORD=${{ inputs.db_password }}
         script: |
           echo "Starting remote deployment process..."
           echo "Creating thunder-buddy directory..."
@@ -112,6 +113,7 @@ runs:
 
           echo "Setting up environment..."
           export DOCKER_USERNAME=${{ inputs.docker_username }}
+          export DB_PASSWORD=${{ inputs.db_password }}
 
           echo "Stopping existing containers (preserving volumes)..."
           docker compose down --remove-orphans || true
@@ -121,3 +123,37 @@ runs:
           echo "Pulling and starting containers..."
           docker compose pull
           docker compose up -d
+
+          echo "Waiting for services to be healthy..."
+          # Wait for DB to be ready (max 30 seconds)
+          timeout 30 bash -c 'until docker exec thunder-buddy-db pg_isready -U thunderbuddy -d thunderbuddy; do sleep 2; done'
+          if [ $? -ne 0 ]; then
+            echo "Error: Database failed to become ready"
+            docker compose logs db
+            exit 1
+          fi
+          echo "Database is ready"
+
+          # Check if app container is running and can connect to DB
+          echo "Waiting for application to become healthy..."
+          for i in {1..30}; do
+            if curl -s http://localhost:5000/health > /dev/null; then
+              echo "Application is healthy"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "Error: Application failed to become healthy"
+              docker compose logs
+              exit 1
+            fi
+            sleep 2
+          done
+
+          # Final connectivity test
+          echo "Testing service connectivity..."
+          if ! curl -s http://localhost:5000/health > /dev/null; then
+            echo "Error: Application health check failed"
+            docker compose logs
+            exit 1
+          fi
+          echo "Deployment completed successfully!"
