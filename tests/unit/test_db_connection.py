@@ -17,12 +17,14 @@ def database_url():
     else:
         del os.environ['DATABASE_URL']
 
+@pytest.mark.unit
 def test_basic_connection(database_url):
     """Test basic connection function"""
     with patch('psycopg2.connect', side_effect=psycopg2.Error('Connection failed')):
         result = test_connection(database_url)
         assert result is False
 
+@pytest.mark.unit
 def test_db_connection_success(database_url):
     """Test successful database connection"""
     with patch('psycopg2.connect') as mock_connect:
@@ -37,12 +39,14 @@ def test_db_connection_success(database_url):
         mock_connect.assert_called_once_with(database_url)
         mock_cursor.execute.assert_called_once_with('SELECT 1')
 
+@pytest.mark.unit
 def test_db_connection_failure(database_url):
     """Test database connection failure"""
     with patch('psycopg2.connect', side_effect=psycopg2.Error('Connection failed')):
         result = test_connection(database_url)
         assert result is False
 
+@pytest.mark.unit
 def test_db_connection_missing_url():
     """Test database connection with missing URL"""
     if 'DATABASE_URL' in os.environ:
