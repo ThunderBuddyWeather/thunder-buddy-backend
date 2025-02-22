@@ -12,18 +12,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      
-      - name: Run Python Linting
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
         run: |
-          pip install flake8
-          flake8 .
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          python -m pytest tests/unit/ -v
 
   build:
     needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      
+
       - uses: ./.github/actions/setup-env
         with:
           db_username: ${{ secrets.DB_USERNAME }}
@@ -32,7 +41,7 @@ jobs:
           db_port: ${{ secrets.DB_PORT }}
           db_name: ${{ secrets.DB_NAME }}
           weatherbit_api_key: ${{ secrets.WEATHERBIT_API_KEY }}
-      
+
       - uses: ./.github/actions/docker-build
         with:
           docker_username: ${{ secrets.DOCKER_USERNAME }}
@@ -55,7 +64,7 @@ jobs:
             if ! docker compose version > /dev/null 2>&1; then
               sudo yum install -y docker-compose-plugin
             fi
-            
+
             # Deploy application
             uses: ./.github/actions/deploy
             with:
@@ -64,12 +73,12 @@ jobs:
               db_password: ${{ secrets.DB_PASSWORD }}
               db_name: ${{ secrets.DB_NAME }}
               weatherbit_api_key: ${{ secrets.WEATHERBIT_API_KEY }}
-            
+
             # Start services
             docker compose pull
             docker compose down --remove-orphans
             docker compose up -d
-            
+
             # Test connection
             for i in {1..10}; do
               if docker compose exec app python scripts/test_db_connection.py; then
