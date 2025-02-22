@@ -137,7 +137,7 @@ runs:
           # Check if app container is running and can connect to DB
           echo "Waiting for application to become healthy..."
           for i in {1..30}; do
-            if curl -s http://localhost:5001/health > /dev/null; then
+            if curl -s http://localhost:5000/health > /dev/null; then
               echo "Application is healthy"
               break
             fi
@@ -151,7 +151,7 @@ runs:
 
           # Final connectivity test
           echo "Testing service connectivity..."
-          if ! curl -s http://localhost:5001/health > /dev/null; then
+          if ! curl -s http://localhost:5000/health > /dev/null; then
             echo "Error: Application health check failed"
             docker compose logs
             exit 1

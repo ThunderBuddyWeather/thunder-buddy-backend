@@ -28,7 +28,7 @@ services:
     env_file:
       - ${ENV_FILE:-.env.local}
     ports:
-      - "5001:5001"
+      - "5000:5000"
     environment:
       - DATABASE_URL=postgresql://thunderbuddy:localdev@db:5432/thunderbuddy
       - DB_PASSWORD=localdev
@@ -38,7 +38,7 @@ services:
     networks:
       - thunder-buddy-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://0.0.0.0:5001/health"]
+      test: ["CMD", "curl", "-f", "http://0.0.0.0:5000/health"]
       interval: 10s
       timeout: 5s
       retries: 3
