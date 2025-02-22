@@ -36,3 +36,4 @@ jobs:
           docker_username: ${{ secrets.DOCKER_USERNAME }}
           docker_password: ${{ secrets.DOCKER_PASSWORD }}
           image_name: thunder-buddy
+          push: "false" # Don't push on PR builds

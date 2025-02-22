@@ -2,15 +2,10 @@
 name: Security Check
 
 on:
-  push:
-    branches:
-      - main
-      - develop
-      - feature/github-actions-aws
   pull_request:
   # Optionally run daily at 3 AM UTC
   schedule:
-    - cron: '0 3 * * *'
+    - cron: "0 3 * * *"
   workflow_dispatch:
 
 jobs:
@@ -26,7 +21,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       # Install project dependencies from requirements.txt.
       - name: Install Dependencies
@@ -36,7 +31,7 @@ jobs:
 
       # Run Bandit to scan your Python code for security issues.
       - name: Run Bandit Security Scan
-        if: always() && false  # Temporarily disabled
+        if: always() && false # Temporarily disabled
         run: |
           pip install bandit
           # -r recursively scans your project directory.
@@ -44,14 +39,14 @@ jobs:
 
       # Run Safety to check your Python dependencies for known vulnerabilities.
       - name: Run Safety Check on Dependencies
-        if: always() && false  # Temporarily disabled
+        if: always() && false # Temporarily disabled
         run: |
           pip install safety
           safety check --full-report
 
       # Run OWASP Dependency-Check to analyze your dependencies.
       - name: Run OWASP Dependency Check
-        if: always() && false  # Temporarily disabled
+        if: always() && false # Temporarily disabled
         run: |
           # Create output directory with proper permissions
           mkdir -p dependency-check-data dependency-check-report

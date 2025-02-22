@@ -9,7 +9,20 @@ on:
   workflow_dispatch:
 
 jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: ./.github/actions/docker-build
+        with:
+          docker_username: ${{ secrets.DOCKER_USERNAME }}
+          docker_password: ${{ secrets.DOCKER_PASSWORD }}
+          image_name: thunder-buddy
+          push: "true" # Push the image when deploying
+
   deploy:
+    needs: build-and-push
     runs-on: ubuntu-latest
     environment: Local
     steps:
