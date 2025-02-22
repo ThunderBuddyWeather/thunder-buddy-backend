@@ -6,11 +6,8 @@ on:
     branches:
       - main
       - develop
-  pull_request:
-    branches:
-      - main
-      - develop
-  workflow_dispatch:
+  pull_request: # PR events for build and test only
+  workflow_dispatch: # Manual trigger option
 
 jobs:
   test:
@@ -35,7 +32,6 @@ jobs:
   build:
     needs: test
     runs-on: ubuntu-latest
-    environment: Local
     steps:
       - uses: actions/checkout@v3
 
@@ -47,6 +43,7 @@ jobs:
 
   deploy:
     needs: build
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     runs-on: ubuntu-latest
     environment: Local
     steps:
