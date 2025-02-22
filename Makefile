@@ -30,8 +30,13 @@ test-integration:
 
 # Run linting
 lint:
-	flake8 .
-	pylint **/*.py
+	flake8 . --max-line-length=88 --extend-ignore=E203,W503 --exclude=venv*,.venv,env,.env,.git,__pycache__,*.pyc,*.egg-info,build,dist --ignore=F401
+	pylint --ignore=venv,env,.venv,.env,build,dist --disable=W0611,C0301 **/*.py
+
+# Auto-fix linting issues where possible
+lint-fix:
+	black . --line-length 88
+	isort . --profile black --line-length 88
 
 # Run tests with coverage
 coverage:

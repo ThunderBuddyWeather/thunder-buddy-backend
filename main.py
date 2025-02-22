@@ -3,13 +3,12 @@ Weather API service built with Flask
 Provides current weather data through REST endpoints
 """
 
-import os
 import json
+import os
 
-from flask import Flask, request, jsonify
-from dotenv import load_dotenv
 import requests  # noqa: E402  # Import not at top of file
-
+from dotenv import load_dotenv
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
@@ -47,16 +46,19 @@ def get_local_weather():
 
     try:
         response = requests.get(weatherbit_url, params=params, timeout=timeout)
-        
+
         # Handle non-200 status codes
         if response.status_code != 200:
-            return jsonify({"error": "Failed to fetch weather data"}), response.status_code
-        
+            return (
+                jsonify({"error": "Failed to fetch weather data"}),
+                response.status_code,
+            )
+
         try:
             return jsonify(response.json())
         except ValueError:  # This catches JSON decode errors
             return jsonify({"error": "Invalid response format"}), 500
-            
+
     except requests.exceptions.Timeout:
         return jsonify({"error": "Request timed out"}), 500
     except requests.exceptions.RequestException:
