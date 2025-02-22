@@ -6,12 +6,10 @@ on:
     branches:
       - main
       - develop
-      - containerize-postgres-ci-cd
   pull_request:
     branches:
       - main
       - develop
-      - feature/github-actions-aws
   workflow_dispatch:
 
 jobs:
