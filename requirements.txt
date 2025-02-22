@@ -5,5 +5,5 @@ pytest>=8.0.0
 pytest-mock>=3.14.0
 pytest-cov>=6.0.0
 faker==36.1.1
-psycopg2-binary==2.9.9
+psycopg2-binary>=2.9.9
 SQLAlchemy==2.0.27
