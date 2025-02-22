@@ -1,0 +1,123 @@
+---
+name: "Deploy to EC2"
+description: "Deploys application to EC2 instance using Docker Compose"
+
+inputs:
+  host:
+    required: true
+    description: "EC2 host address"
+  username:
+    required: true
+    description: "SSH username"
+  key:
+    required: true
+    description: "SSH private key"
+  docker_username:
+    required: true
+    description: "Docker Hub username"
+  db_password:
+    required: true
+    description: "Database password"
+  weatherbit_api_key:
+    required: true
+    description: "Weatherbit API key"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Validate inputs
+      shell: bash
+      run: |
+        # Validate and log input values
+        echo "Validating deployment inputs..."
+
+        # Validate SSH inputs
+        if [ -z "${{ inputs.host }}" ]; then
+          echo "Error: SSH host is empty"
+          exit 1
+        fi
+        echo "SSH host is set"
+
+        if [ -z "${{ inputs.username }}" ]; then
+          echo "Error: SSH username is empty"
+          exit 1
+        fi
+        echo "SSH username is set"
+
+        if [ -z "${{ inputs.key }}" ]; then
+          echo "Error: SSH key is empty"
+          exit 1
+        fi
+        echo "SSH key is set"
+
+        if [ -z "${{ inputs.docker_username }}" ]; then
+          echo "Error: DOCKER_USERNAME is empty"
+          exit 1
+        fi
+        echo "DOCKER_USERNAME is set to: ${{ inputs.docker_username }}"
+
+        echo "All required inputs validated successfully"
+
+    - name: Setup SSH
+      shell: bash
+      run: |
+        # Create SSH directory
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+
+        # Write the private key to a file
+        echo "${{ inputs.key }}" > ~/.ssh/ec2_key
+        chmod 600 ~/.ssh/ec2_key
+
+        # Add host key to known hosts to prevent verification prompt
+        ssh-keyscan -H ${{ inputs.host }} >> ~/.ssh/known_hosts
+
+    - name: Create environment file
+      shell: bash
+      run: |
+        # Create .env.local from .env.ci template
+        cp .env.ci .env.local
+
+        # Replace placeholders with actual inputs
+        sed -i "s/\${DB_PASSWORD}/${{ inputs.db_password }}/g" .env.local
+        sed -i "s/\${WEATHERBIT_API_KEY}/${{ inputs.weatherbit_api_key }}/g" .env.local
+
+    - name: Copy files to EC2
+      shell: bash
+      run: |
+        # Create a temporary directory for deployment files
+        mkdir -p ~/deploy-temp
+        cp docker-compose.yml Dockerfile requirements.txt .env.local ~/deploy-temp/
+        cp -r scripts/ ~/deploy-temp/
+        cp main.py ~/deploy-temp/
+
+        # Copy all files to EC2
+        scp -i ~/.ssh/ec2_key -r ~/deploy-temp/* ${{ inputs.username }}@${{ inputs.host }}:~/thunder-buddy/
+        echo "All deployment files copied to EC2"
+
+    - name: Deploy to EC2
+      uses: appleboy/ssh-action@v0.1.9
+      with:
+        host: ${{ inputs.host }}
+        username: ${{ inputs.username }}
+        key: ${{ inputs.key }}
+        script_stop: true
+        envs: |
+          DOCKER_USERNAME=${{ inputs.docker_username }}
+        script: |
+          echo "Starting remote deployment process..."
+          echo "Creating thunder-buddy directory..."
+          mkdir -p ~/thunder-buddy
+          cd ~/thunder-buddy
+
+          echo "Setting up environment..."
+          export DOCKER_USERNAME=${{ inputs.docker_username }}
+
+          echo "Stopping existing containers (preserving volumes)..."
+          docker compose down --remove-orphans || true
+          # Remove only containers, not volumes
+          docker rm -f thunder-buddy thunder-buddy-db || true
+
+          echo "Pulling and starting containers..."
+          docker compose pull
+          docker compose up -d

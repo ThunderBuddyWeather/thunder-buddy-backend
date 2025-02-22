@@ -1,3 +1,4 @@
+---
 name: 'Docker Build and Push'
 description: 'Builds and pushes Docker image to registry'
 
@@ -35,4 +36,4 @@ runs:
     - name: Push Docker Image
       shell: bash
       run: |
-        docker push ${{ inputs.docker_username }}/${{ inputs.image_name }}:latest 
+        docker push ${{ inputs.docker_username }}/${{ inputs.image_name }}:latest

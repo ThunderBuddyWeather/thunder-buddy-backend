@@ -1,0 +1,31 @@
+---
+extends: default
+
+rules:
+  line-length:
+    max: 120
+    level: warning
+  truthy:
+    check-keys: false
+  comments:
+    min-spaces-from-content: 1
+  document-start:
+    present: true
+  indentation:
+    spaces: 2
+    indent-sequences: true
+  trailing-spaces: enable
+  new-line-at-end-of-file: enable
+
+ignore: |
+  venv/
+  .venv/
+  env/
+  .env/
+  node_modules/
+  .git/
+  __pycache__/
+  *.pyc
+  *.egg-info/
+  build/
+  dist/

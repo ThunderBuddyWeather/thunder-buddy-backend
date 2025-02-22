@@ -1,4 +1,4 @@
-.PHONY: help test test-unit test-integration lint coverage clean install dev-env
+.PHONY: help test test-unit test-integration lint coverage clean install dev-env yamlint yamlint-fix
 
 # Default target when just running 'make'
 help:
@@ -11,6 +11,8 @@ help:
 	@echo "  make coverage         - Run tests with coverage report"
 	@echo "  make clean            - Remove Python file artifacts"
 	@echo "  make dev-env          - Set up development environment"
+	@echo "  make yamlint          - Run YAML linting"
+	@echo "  make yamlint-fix      - Auto-fix YAML formatting issues"
 
 # Install dependencies
 install:
@@ -57,3 +59,20 @@ clean:
 dev-env:
 	python -m venv venv
 	. venv/bin/activate && pip install -r requirements.txt
+
+# Run YAML linting
+yamlint:
+	pip install yamllint
+	yamllint .
+
+# Auto-fix YAML formatting (macOS compatible)
+yamlint-fix:
+	pip install yamllint
+	# First, ensure all YAML files end with newline
+	find . -name "*.yml" -not -path "./venv/*" -not -path "./.venv/*" -not -path "./env/*" -not -path "./node_modules/*" -exec sh -c 'printf "%s\n" "$$(cat "{}")" > "{}"' \;
+	# Remove trailing spaces
+	find . -name "*.yml" -not -path "./venv/*" -not -path "./.venv/*" -not -path "./env/*" -not -path "./node_modules/*" -exec sed -i '' -E 's/[[:space:]]*$$//' {} \;
+	# Add document start marker if missing
+	find . -name "*.yml" -not -path "./venv/*" -not -path "./.venv/*" -not -path "./env/*" -not -path "./node_modules/*" -exec sh -c 'if ! grep -q "^---" "{}"; then printf -- "---\n%s" "$$(cat "{}")" > "{}"; fi' \;
+	# Run yamllint to check remaining issues
+	yamllint -f parsable .

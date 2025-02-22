@@ -35,6 +35,7 @@ htmlcov/
 # Environment variables
 .env
 .env.*
+!.env.ci
 
 # Logs
 *.log

@@ -1,5 +1,4 @@
-version: '3.8'
-
+---
 services:
   db:
     image: postgres:15-alpine
@@ -7,25 +6,40 @@ services:
     env_file:
       - ${ENV_FILE:-.env.local}
     environment:
-      POSTGRES_DB: ${DB_NAME:-thunderbuddy}
-      POSTGRES_USER: ${DB_USERNAME:-thunderbuddy}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-localdev}
+      POSTGRES_DB: db-thunderbuddy
+      POSTGRES_USER: thunderbuddy
+      POSTGRES_PASSWORD: localdev
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - thunder_buddy_postgres_15:/var/lib/postgresql/data
+    networks:
+      - thunder-buddy-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U thunderbuddy -d db-thunderbuddy"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   app:
-    build: .
+    image: ${DOCKER_USERNAME}/thunder-buddy:latest
     container_name: thunder-buddy
     env_file:
       - ${ENV_FILE:-.env.local}
     ports:
       - "5000:5000"
     environment:
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=postgresql://thunderbuddy:localdev@db:5432/thunderbuddy
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    networks:
+      - thunder-buddy-network
 
 volumes:
-  postgres_data: 
+  thunder_buddy_postgres_15:
+    name: thunder_buddy_postgres_15
+
+networks:
+  thunder-buddy-network:
+    name: thunder-buddy-network
