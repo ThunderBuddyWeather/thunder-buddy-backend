@@ -6,14 +6,14 @@ services:
     env_file:
       - ${ENV_FILE:-.env.local}
     environment:
-      POSTGRES_DB: postgres
-      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres # Default database
+      POSTGRES_USER: postgres # Default superuser
       POSTGRES_PASSWORD: localdev
     ports:
       - "5432:5432"
     volumes:
       - thunder_buddy_postgres_15:/var/lib/postgresql/data
-      - ./scripts/db/init:/docker-entrypoint-initdb.d
+      - ./scripts/db/init:/docker-entrypoint-initdb.d # Init scripts
     networks:
       - thunder-buddy-network
     healthcheck:
@@ -28,7 +28,7 @@ services:
     env_file:
       - ${ENV_FILE:-.env.local}
     ports:
-      - "5000:5000"
+      - "5001:5001"
     environment:
       - DATABASE_URL=postgresql://thunderbuddy:localdev@db:5432/thunderbuddy
       - DB_PASSWORD=localdev
@@ -38,7 +38,7 @@ services:
     networks:
       - thunder-buddy-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://0.0.0.0:5000/health"]
+      test: ["CMD", "curl", "-f", "http://0.0.0.0:5001/health"]
       interval: 10s
       timeout: 5s
       retries: 3
