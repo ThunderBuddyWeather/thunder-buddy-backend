@@ -1,0 +1,26 @@
+---
+name: CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: Local
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Deploy to EC2
+        uses: ./.github/actions/ec2-deploy
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          docker_username: ${{ secrets.DOCKER_USERNAME }}
+          db_password: ${{ secrets.DB_PASSWORD }}
+          weatherbit_api_key: ${{ secrets.WEATHERBIT_API_KEY }}
