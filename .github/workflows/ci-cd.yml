@@ -52,6 +52,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.9
         with:
@@ -65,14 +67,52 @@ jobs:
               sudo yum install -y docker-compose-plugin
             fi
 
-            # Deploy application
-            uses: ./.github/actions/deploy
-            with:
-              docker_username: ${{ secrets.DOCKER_USERNAME }}
-              db_username: ${{ secrets.DB_USERNAME }}
-              db_password: ${{ secrets.DB_PASSWORD }}
-              db_name: ${{ secrets.DB_NAME }}
-              weatherbit_api_key: ${{ secrets.WEATHERBIT_API_KEY }}
+            # Create environment file
+            cat > .env << EOL
+            DB_USERNAME=${{ secrets.DB_USERNAME }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_NAME=${{ secrets.DB_NAME }}
+            WEATHERBIT_API_KEY=${{ secrets.WEATHERBIT_API_KEY }}
+            EOL
+
+            # Create docker-compose file
+            cat > compose.yaml << EOL
+            services:
+              db:
+                image: postgres:15-alpine
+                container_name: thunder-buddy-db
+                environment:
+                  POSTGRES_DB: ${DB_NAME}
+                  POSTGRES_USER: ${DB_USERNAME}
+                  POSTGRES_PASSWORD: ${DB_PASSWORD}
+                networks:
+                  - thunder-buddy-network
+                healthcheck:
+                  test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
+                  interval: 5s
+                  timeout: 5s
+                  retries: 5
+              
+              app:
+                image: ${{ secrets.DOCKER_USERNAME }}/thunder-buddy:latest
+                container_name: thunder-buddy
+                ports:
+                  - "5000:5000"
+                environment:
+                  DATABASE_URL: postgresql://${DB_USERNAME}:${DB_PASSWORD}@db:5432/${DB_NAME}
+                  FLASK_DEBUG: "false"
+                  REQUEST_TIMEOUT: "30"
+                  WEATHERBIT_API_KEY: ${WEATHERBIT_API_KEY}
+                depends_on:
+                  db:
+                    condition: service_healthy
+                networks:
+                  - thunder-buddy-network
+
+            networks:
+              thunder-buddy-network:
+                name: thunder-buddy-network
+            EOL
 
             # Start services
             docker compose pull
