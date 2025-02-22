@@ -15,11 +15,23 @@ COPY requirements.txt .
 # which helps reduce the final image size.
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the main application file (app.py) into the container.
+# Copy application files
 COPY main.py .
+COPY scripts/ scripts/
 
 # Expose port 5000 so that the container listens on this port at runtime.
 EXPOSE 5000
+
+# Add build argument for database URL
+ARG DATABASE_URL
+ENV DATABASE_URL=${DATABASE_URL}
+
+# Add additional environment variables
+ENV DB_HOST=db
+ENV DB_PORT=5432
+ENV DB_NAME=thunderbuddy
+ENV DB_USER=thunderbuddy
+ENV DB_PASSWORD=localdev
 
 # Set the container's entrypoint to run your application.
 # ENTRYPOINT enforces that the command will always be run.
