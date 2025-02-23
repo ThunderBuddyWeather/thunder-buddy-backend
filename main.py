@@ -13,6 +13,17 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from sqlalchemy import create_engine, text
 
+from flask_swagger_ui import get_swaggerui_blueprint
+
+# Swagger UI setup
+SWAGGER_URL = "/apidocs"
+API_URL = "/static/swagger.yaml"  # Ensure the YAML file is inside the 'static' folder
+
+swaggerui_blueprint = get_swaggerui_blueprint(
+    SWAGGER_URL, API_URL, config={"app_name": "Thunder Buddy API"}
+)
+
+
 from scripts.test_db_connection import test_connection  # Add this line
 
 app = Flask(__name__)
