@@ -9,7 +9,8 @@ import pytest
 @pytest.fixture(scope="session")
 def database_url():
     """Fixture to provide database URL for integration tests"""
-    url = os.environ.get("DATABASE_URL")
+    # Get the URL from environment and replace 'db' host with 'localhost'
+    url = os.environ.get("DATABASE_URL", "").replace("@db:", "@localhost:")
     if not url:
         pytest.skip("DATABASE_URL not set")
     return url
