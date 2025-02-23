@@ -1,0 +1,84 @@
+swagger: "2.0"
+info:
+  title: Thunder Buddy API
+  description: API documentation for Thunder Buddy Weather service
+  version: "1.0"
+
+schemes:
+  - http
+
+paths:
+  /:
+    get:
+      summary: Hello World
+      description: Returns a simple greeting message.
+      responses:
+        200:
+          description: Success
+          schema:
+            type: object
+            properties:
+              Message:
+                type: string
+                example: "Hello World"
+
+  /weather:
+    get:
+      summary: Get Local Weather
+      description: Returns current weather data for a given ZIP code and country.
+      parameters:
+        - name: zip
+          in: query
+          type: string
+          required: true
+          description: ZIP code to get weather for.
+        - name: country
+          in: query
+          type: string
+          required: false
+          description: Country code (default is 'US').
+      responses:
+        200:
+          description: Weather data retrieved successfully.
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  type: object
+        400:
+          description: ZIP code is required.
+        500:
+          description: API request failed or invalid response format.
+
+  /health:
+    get:
+      summary: Health Check
+      description: Checks the health of the application by verifying database connectivity.
+      responses:
+        200:
+          description: API is healthy
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "healthy"
+              db:
+                type: string
+                example: "connected"
+        500:
+          description: Database connection failed.
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "unhealthy"
+              db:
+                type: string
+                example: "disconnected"
+              error:
+                type: string
+                example: "Database connection error message"
