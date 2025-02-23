@@ -33,14 +33,14 @@ services:
       DB_PASSWORD: localdev
       DOCKER_USERNAME: aasimsyed
     ports:
-      - "5001:5001"
+      - "5000:5000"
     depends_on:
       db:
         condition: service_healthy
     networks:
       - thunder-buddy-network
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:5001/health"]
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:5000/health"]
       interval: 10s
       timeout: 5s
       retries: 3
