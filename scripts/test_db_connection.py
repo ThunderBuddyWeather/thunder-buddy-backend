@@ -13,34 +13,35 @@ from sqlalchemy import create_engine, text
 
 # Find and load environment variables from project root
 project_root = Path(__file__).parent.parent
-env_path = project_root / '.env.local'
+env_path = project_root / ".env.local"
 load_dotenv(env_path)
 
 # Print for debugging
 print(f"Loading env from: {env_path}")
 print(f"DATABASE_URL: {os.getenv('DATABASE_URL')}")
 
+
 def test_connection(database_url=None) -> Dict[str, str]:
     """Test database connection using environment variables or provided URL"""
     db_status = {
         "connection": "unhealthy",
         "query": "unhealthy",
-        "message": "Not checked"
+        "message": "Not checked",
     }
 
     try:
         # Use provided URL or fall back to environment variable
         conn_url = database_url or os.environ["DATABASE_URL"]
-        
+
         # Test basic connection
         conn = psycopg2.connect(conn_url)
         conn.close()
         db_status["connection"] = "healthy"
-        
+
         # Test query execution
         engine = create_engine(conn_url)
         with engine.connect() as connection:
-            result = connection.execute(text('SELECT 1')).scalar()
+            result = connection.execute(text("SELECT 1")).scalar()
             if result == 1:
                 db_status["query"] = "healthy"
                 db_status["message"] = "Database connection and query successful"
@@ -59,4 +60,6 @@ if __name__ == "__main__":
     print(f"Connection: {result['connection']}")
     print(f"Query: {result['query']}")
     print(f"Message: {result['message']}")
-    sys.exit(0 if result["connection"] == "healthy" and result["query"] == "healthy" else 1)
+    sys.exit(
+        0 if result["connection"] == "healthy" and result["query"] == "healthy" else 1
+    )

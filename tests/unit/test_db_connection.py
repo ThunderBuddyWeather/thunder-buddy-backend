@@ -36,8 +36,9 @@ def test_connection_response_structure():
 @pytest.mark.unit
 def test_db_connection_success(database_url):
     """Test successful database connection"""
-    with patch("psycopg2.connect") as mock_connect, \
-         patch("scripts.test_db_connection.create_engine") as mock_engine:
+    with patch("psycopg2.connect") as mock_connect, patch(
+        "scripts.test_db_connection.create_engine"
+    ) as mock_engine:
         # Setup mock engine
         mock_conn = mock_engine.return_value.connect.return_value.__enter__.return_value
         mock_conn.execute.return_value.scalar.return_value = 1

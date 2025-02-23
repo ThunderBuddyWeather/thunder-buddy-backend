@@ -1,4 +1,4 @@
-.PHONY: help test test-unit test-integration lint coverage clean install dev-env yamlint yamlint-fix
+.PHONY: help test test-unit test-integration lint coverage clean install dev-env yamlint yamlint-fix swagger
 
 # Default target when just running 'make'
 help:
@@ -13,6 +13,7 @@ help:
 	@echo "  make dev-env          - Set up development environment"
 	@echo "  make yamlint          - Run YAML linting"
 	@echo "  make yamlint-fix      - Auto-fix YAML formatting issues"
+	@echo "  make swagger          - Generate Swagger/OpenAPI specification"
 
 # Install dependencies
 install:
@@ -76,3 +77,14 @@ yamlint-fix:
 	find . -name "*.yml" -not -path "./venv/*" -not -path "./.venv/*" -not -path "./env/*" -not -path "./node_modules/*" -exec sh -c 'if ! grep -q "^---" "{}"; then printf -- "---\n%s" "$$(cat "{}")" > "{}"; fi' \;
 	# Run yamllint to check remaining issues
 	yamllint -f parsable .
+
+# Generate Swagger/OpenAPI specification
+swagger:
+	@echo "Generating Swagger specification..."
+	@mkdir -p static
+	@if [ -f .env.local ]; then \
+		echo "Using .env.local for configuration"; \
+	else \
+		echo "Warning: .env.local not found, using default .env"; \
+	fi
+	. venv/bin/activate && python scripts/generate_swagger.py

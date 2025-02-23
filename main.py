@@ -106,16 +106,15 @@ def health_check() -> Tuple[Dict, int]:
     db_health: Dict[str, str] = check_db_health()
 
     health_status = {
-        "status": "healthy" 
-        if db_health["connection"] == "healthy" and db_health["query"] == "healthy"
-        else "unhealthy",
+        "status": (
+            "healthy"
+            if db_health["connection"] == "healthy" and db_health["query"] == "healthy"
+            else "unhealthy"
+        ),
         "components": {
-            "api": {
-                "status": "healthy",
-                "message": "API service is running"
-            },
-            "database": db_health
-        }
+            "api": {"status": "healthy", "message": "API service is running"},
+            "database": db_health,
+        },
     }
 
     http_status = 200 if health_status["status"] == "healthy" else 503
