@@ -13,6 +13,21 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from sqlalchemy import create_engine, text
 
+try:
+    from flask_swagger_ui import get_swaggerui_blueprint
+except ImportError:
+    get_swaggerui_blueprint = None
+    logging.warning("flask-swagger-ui not installed. API docs will not be available.")
+
+# Swagger UI setup
+SWAGGER_URL = "/apidocs"
+API_URL = "/static/swagger.yaml"  # Ensure the YAML file is inside the 'static' folder
+
+if get_swaggerui_blueprint:
+    swaggerui_blueprint = get_swaggerui_blueprint(
+        SWAGGER_URL, API_URL, config={"app_name": "Thunder Buddy API"}
+    )
+
 from scripts.test_db_connection import test_connection  # Add this line
 
 app = Flask(__name__)
