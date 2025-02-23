@@ -6,13 +6,13 @@ services:
     env_file:
       - ${ENV_FILE:-.env.local}
     environment:
-      POSTGRES_DB: thunderbuddy
-      POSTGRES_USER: thunderbuddy
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
       - thunder_buddy_postgres_15:/var/lib/postgresql/data
+      - ./docker/db/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - thunder-buddy-network
     healthcheck:
