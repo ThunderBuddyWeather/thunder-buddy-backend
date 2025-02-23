@@ -5,11 +5,13 @@ Provides current weather data through REST endpoints
 
 import logging
 import os
+from typing import Dict, Tuple
 
 import psycopg2
 import requests  # noqa: E402
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
+from sqlalchemy import create_engine, text
 
 from scripts.test_db_connection import test_connection  # Add this line
 
@@ -71,15 +73,34 @@ def get_local_weather():
         return jsonify({"error": "API request failed"}), 500
 
 
+def check_db_health() -> Dict[str, str]:
+    """
+    Perform comprehensive database health checks
+    Returns: Dictionary with connection and query status
+    """
+    return test_connection()
+
+
 @app.route("/health", methods=["GET"])
-def health_check():
+def health_check() -> Tuple[Dict, int]:
     """Check the health of the application by verifying database connectivity."""
-    try:
-        if test_connection():
-            return jsonify({'status': 'healthy', 'db': 'connected'}), 200
-        return jsonify({'status': 'unhealthy', 'db': 'disconnected'}), 500
-    except (psycopg2.Error, KeyError) as e:
-        return jsonify({'status': 'unhealthy', 'error': str(e)}), 500
+    db_health: Dict[str, str] = check_db_health()
+
+    health_status = {
+        "status": "healthy" 
+        if db_health["connection"] == "healthy" and db_health["query"] == "healthy"
+        else "unhealthy",
+        "components": {
+            "api": {
+                "status": "healthy",
+                "message": "API service is running"
+            },
+            "database": db_health
+        }
+    }
+
+    http_status = 200 if health_status["status"] == "healthy" else 503
+    return jsonify(health_status), http_status
 
 
 if __name__ == "__main__":
