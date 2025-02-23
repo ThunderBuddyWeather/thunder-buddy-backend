@@ -22,6 +22,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY main.py .
 COPY scripts/ scripts/
 
+# Create static directory if it doesn't exist
+COPY static/ static/
+
 # Expose port 5000 so that the container listens on this port at runtime.
 EXPOSE 5000
 

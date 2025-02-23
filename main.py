@@ -32,6 +32,10 @@ from scripts.test_db_connection import test_connection  # Add this line
 
 app = Flask(__name__)
 
+# Register Swagger UI blueprint if available
+if get_swaggerui_blueprint:
+    app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
+
 load_dotenv()
 
 # fmt: off
