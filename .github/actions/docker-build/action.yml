@@ -35,9 +35,20 @@ runs:
     - name: Build and Push
       shell: bash
       run: |
-        docker buildx build \
-          --platform linux/amd64,linux/arm64 \
-          --build-arg ENV_FILE=.env \
-          -t ${{ inputs.docker_username }}/${{ inputs.image_name }}:latest \
-          ${{ inputs.push == 'true' && '--push' || '--load' }} \
-          .
+        if [[ "${{ inputs.push }}" == "true" ]]; then
+          # For production: build multi-arch and push
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            --build-arg ENV_FILE=.env \
+            -t ${{ inputs.docker_username }}/${{ inputs.image_name }}:latest \
+            --push \
+            .
+        else
+          # For testing: build single arch and load
+          docker buildx build \
+            --platform linux/amd64 \
+            --build-arg ENV_FILE=.env \
+            -t ${{ inputs.docker_username }}/${{ inputs.image_name }}:latest \
+            --load \
+            .
+        fi
