@@ -7,6 +7,7 @@ pytest-cov>=6.0.0
 faker==36.1.1
 psycopg2-binary>=2.9.9
 SQLAlchemy==2.0.27
+flask-swagger-ui>=4.11.1
 
 # Linting tools
 flake8>=7.0.0
