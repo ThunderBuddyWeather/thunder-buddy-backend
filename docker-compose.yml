@@ -6,13 +6,14 @@ services:
     env_file:
       - ${ENV_FILE:-.env.local}
     environment:
-      POSTGRES_DB: thunderbuddy
-      POSTGRES_USER: thunderbuddy
+      POSTGRES_DB: postgres # Default database
+      POSTGRES_USER: postgres # Default superuser
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
       - thunder_buddy_postgres_15:/var/lib/postgresql/data
+      - ./scripts/db/init:/docker-entrypoint-initdb.d # Init scripts
     networks:
       - thunder-buddy-network
     healthcheck:
