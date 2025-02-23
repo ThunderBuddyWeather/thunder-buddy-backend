@@ -1,0 +1,385 @@
+diff --git a/.env.ci b/.env.ci
+index b80172a..a50a665 100644
+--- a/.env.ci
++++ b/.env.ci
+@@ -12,7 +12,7 @@ DATABASE_URL=postgresql://thunderbuddy:${DB_PASSWORD}@db:5432/thunderbuddy
+ 
+ # Application settings
+ FLASK_HOST=0.0.0.0
+-FLASK_PORT=5000
++FLASK_PORT=5001
+ FLASK_DEBUG=false
+ REQUEST_TIMEOUT=10
+ 
+diff --git a/.github/actions/docker-build/action.yml b/.github/actions/docker-build/action.yml
+index 76efe6d..3e43a4f 100644
+--- a/.github/actions/docker-build/action.yml
++++ b/.github/actions/docker-build/action.yml
+@@ -20,27 +20,24 @@ inputs:
+ runs:
+   using: "composite"
+   steps:
++    - name: Set up QEMU
++      uses: docker/setup-qemu-action@v3
++
++    - name: Set up Docker Buildx
++      uses: docker/setup-buildx-action@v3
++
+     - name: Login to Docker Hub
+       if: inputs.push == 'true'
+       shell: bash
+       run: |
+         echo "${{ inputs.docker_password }}" | docker login --username ${{ inputs.docker_username }} --password-stdin
+ 
+-    - name: Build Docker Image
++    - name: Build and Push
+       shell: bash
+       run: |
+-        docker build \
++        docker buildx build \
++          --platform linux/amd64,linux/arm64 \
+           --build-arg ENV_FILE=.env \
+-          -t ${{ inputs.image_name }} .
+-
+-    - name: Tag Docker Image
+-      if: inputs.push == 'true'
+-      shell: bash
+-      run: |
+-        docker tag ${{ inputs.image_name }}:latest ${{ inputs.docker_username }}/${{ inputs.image_name }}:latest
+-
+-    - name: Push Docker Image
+-      if: inputs.push == 'true'
+-      shell: bash
+-      run: |
+-        docker push ${{ inputs.docker_username }}/${{ inputs.image_name }}:latest
++          -t ${{ inputs.docker_username }}/${{ inputs.image_name }}:latest \
++          ${{ inputs.push == 'true' && '--push' || '--load' }} \
++          .
+diff --git a/.github/actions/ec2-deploy/action.yml b/.github/actions/ec2-deploy/action.yml
+index 550cee0..45dab69 100644
+--- a/.github/actions/ec2-deploy/action.yml
++++ b/.github/actions/ec2-deploy/action.yml
+@@ -137,7 +137,7 @@ runs:
+           # Check if app container is running and can connect to DB
+           echo "Waiting for application to become healthy..."
+           for i in {1..30}; do
+-            if curl -s http://localhost:5000/health > /dev/null; then
++            if curl -s http://localhost:5001/health > /dev/null; then
+               echo "Application is healthy"
+               break
+             fi
+@@ -151,7 +151,7 @@ runs:
+ 
+           # Final connectivity test
+           echo "Testing service connectivity..."
+-          if ! curl -s http://localhost:5000/health > /dev/null; then
++          if ! curl -s http://localhost:5001/health > /dev/null; then
+             echo "Error: Application health check failed"
+             docker compose logs
+             exit 1
+diff --git a/Dockerfile b/Dockerfile
+index ce03a7e..36cadf2 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -22,8 +22,8 @@ RUN pip install --no-cache-dir -r requirements.txt
+ COPY main.py .
+ COPY scripts/ scripts/
+ 
+-# Expose port 5000 so that the container listens on this port at runtime.
+-EXPOSE 5000
++# Expose port 5001 so that the container listens on this port at runtime.
++EXPOSE 5001
+ 
+ # Environment variables
+ ENV DB_HOST=db \
+diff --git a/diff b/diff
+new file mode 100644
+index 0000000..e69de29
+diff --git a/docker-compose.yml b/docker-compose.yml
+index b63283a..1ed52dc 100644
+--- a/docker-compose.yml
++++ b/docker-compose.yml
+@@ -3,17 +3,16 @@ services:
+   db:
+     image: postgres:15-alpine
+     container_name: thunder-buddy-db
+-    env_file:
+-      - ${ENV_FILE:-.env.local}
+     environment:
+-      POSTGRES_DB: postgres # Default database
+-      POSTGRES_USER: postgres # Default superuser
+-      POSTGRES_PASSWORD: ${DB_PASSWORD}
++      POSTGRES_DB: postgres
++      POSTGRES_USER: postgres
++      POSTGRES_PASSWORD: localdev
++      DB_PASSWORD: localdev
+     ports:
+       - "5432:5432"
+     volumes:
+       - thunder_buddy_postgres_15:/var/lib/postgresql/data
+-      - ./scripts/db/init:/docker-entrypoint-initdb.d # Init scripts
++      - ./scripts/db/init:/docker-entrypoint-initdb.d
+     networks:
+       - thunder-buddy-network
+     healthcheck:
+@@ -23,22 +22,25 @@ services:
+       retries: 5
+ 
+   app:
+-    image: ${DOCKER_USERNAME}/thunder-buddy:latest
++    image: aasimsyed/thunder-buddy:latest
++    platform: linux/arm64
+     container_name: thunder-buddy
+-    env_file:
+-      - ${ENV_FILE:-.env.local}
+-    ports:
+-      - "5000:5000"
++    build:
++      context: .
++      dockerfile: Dockerfile
+     environment:
+-      - DATABASE_URL=postgresql://thunderbuddy:${DB_PASSWORD}@db:5432/thunderbuddy
+-      - DB_PASSWORD=${DB_PASSWORD}
++      DATABASE_URL: postgresql://thunderbuddy:localdev@db:5432/thunderbuddy
++      DB_PASSWORD: localdev
++      DOCKER_USERNAME: aasimsyed
++    ports:
++      - "5001:5001"
+     depends_on:
+       db:
+         condition: service_healthy
+     networks:
+       - thunder-buddy-network
+     healthcheck:
+-      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:5000/health"]
++      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:5001/health"]
+       interval: 10s
+       timeout: 5s
+       retries: 3
+diff --git a/main.py b/main.py
+index 0beb960..274b5de 100644
+--- a/main.py
++++ b/main.py
+@@ -83,4 +83,4 @@ def health_check():
+ 
+ 
+ if __name__ == "__main__":
+-    app.run(host="0.0.0.0", port=5000, debug=True)
++    app.run(host="0.0.0.0", port=5001, debug=True)
+diff --git a/scripts/build-local.sh b/scripts/build-local.sh
+new file mode 100644
+index 0000000..6d56e26
+--- /dev/null
++++ b/scripts/build-local.sh
+@@ -0,0 +1,8 @@
++#!/bin/bash
++
++# Build the local image
++docker buildx build \
++  --platform linux/arm64 \
++  --load \
++  -t aasimsyed/thunder-buddy:latest \
++  . 
+\ No newline at end of file
+diff --git a/scripts/db/init/01-init-db.sql b/scripts/db/init/01-init-db.sql
+index ae46647..c1e6eea 100644
+--- a/scripts/db/init/01-init-db.sql
++++ b/scripts/db/init/01-init-db.sql
+@@ -1,12 +1,12 @@
+ -- Run as postgres superuser
+ -- Initial setup and user creation
+ 
++-- Create application user with limited privileges
++CREATE USER thunderbuddy WITH PASSWORD 'localdev';
++
+ -- Create application database
+ CREATE DATABASE thunderbuddy;
+ 
+--- Create application user with limited privileges
+-CREATE USER thunderbuddy WITH PASSWORD '${DB_PASSWORD}';
+-
+ -- Connect to the application database
+ \c thunderbuddy;
+ 
+@@ -25,10 +25,64 @@ REVOKE ALL ON SCHEMA public FROM PUBLIC;
+ -- Grant minimal required privileges to application user
+ GRANT CONNECT ON DATABASE thunderbuddy TO thunderbuddy;
+ GRANT USAGE ON SCHEMA public TO thunderbuddy;
+-GRANT USAGE ON EXTENSION uuid-ossp TO thunderbuddy;
++
++-- Grant usage on uuid-ossp functions
++GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO thunderbuddy;
++GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA pg_catalog TO thunderbuddy;
++GRANT EXECUTE ON FUNCTION uuid_generate_v4() TO thunderbuddy;
++
++-- Create weather_data table
++CREATE TABLE IF NOT EXISTS public.weather_data (
++    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
++    zip_code VARCHAR(10) NOT NULL,
++    country_code CHAR(2) NOT NULL,
++    temperature DECIMAL(5,2),
++    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
++    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
++);
++
++-- Create index for common queries
++CREATE INDEX IF NOT EXISTS idx_weather_data_zip_country 
++ON public.weather_data(zip_code, country_code);
++
++-- Create trigger for updated_at
++CREATE OR REPLACE FUNCTION update_updated_at_column()
++RETURNS TRIGGER AS $$
++BEGIN
++    NEW.updated_at = CURRENT_TIMESTAMP;
++    RETURN NEW;
++END;
++$$ language 'plpgsql';
++
++CREATE TRIGGER update_weather_data_updated_at
++    BEFORE UPDATE ON public.weather_data
++    FOR EACH ROW
++    EXECUTE FUNCTION update_updated_at_column();
++
++-- Grant specific permissions to application user
++GRANT SELECT, INSERT, UPDATE, DELETE ON public.weather_data TO thunderbuddy;
++GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO thunderbuddy;
++
++-- Create versioning table for migrations
++CREATE TABLE IF NOT EXISTS public.schema_versions (
++    version INTEGER PRIMARY KEY,
++    description TEXT NOT NULL,
++    applied_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
++    applied_by TEXT DEFAULT CURRENT_USER
++);
++
++-- Grant read-only access to schema_versions
++GRANT SELECT ON public.schema_versions TO thunderbuddy;
++
++-- Record initial schema version
++INSERT INTO public.schema_versions (version, description)
++VALUES (1, 'Initial schema setup') ON CONFLICT DO NOTHING;
+ 
+ -- Set default privileges for future objects
+ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
+     GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO thunderbuddy;
+ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
+-    GRANT USAGE, SELECT ON SEQUENCES TO thunderbuddy; 
+\ No newline at end of file
++    GRANT USAGE, SELECT ON SEQUENCES TO thunderbuddy;
++
++-- Make sure the application user can access the database
++ALTER DATABASE thunderbuddy OWNER TO thunderbuddy; 
+\ No newline at end of file
+diff --git a/scripts/db/init/01-init.sql b/scripts/db/init/01-init.sql
+deleted file mode 100644
+index cec8ea6..0000000
+--- a/scripts/db/init/01-init.sql
++++ /dev/null
+@@ -1,48 +0,0 @@
+--- Create application user with limited privileges
+-CREATE USER thunderbuddy WITH PASSWORD '${DB_PASSWORD}';
+-
+--- Create application database
+-CREATE DATABASE thunderbuddy;
+-
+--- Connect to the application database
+-\c thunderbuddy;
+-
+--- Create schema
+-CREATE SCHEMA IF NOT EXISTS public;
+-
+--- Create extensions if needed
+-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-
+--- Set up proper permissions
+--- Revoke all permissions from PUBLIC
+-REVOKE ALL ON ALL TABLES IN SCHEMA public FROM PUBLIC;
+-REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM PUBLIC;
+-REVOKE ALL ON ALL FUNCTIONS IN SCHEMA public FROM PUBLIC;
+-
+--- Grant specific permissions to application user
+-GRANT CONNECT ON DATABASE thunderbuddy TO thunderbuddy;
+-GRANT USAGE ON SCHEMA public TO thunderbuddy;
+-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO thunderbuddy;
+-GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO thunderbuddy;
+-
+--- Set default privileges for future objects
+-ALTER DEFAULT PRIVILEGES IN SCHEMA public
+-    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO thunderbuddy;
+-ALTER DEFAULT PRIVILEGES IN SCHEMA public
+-    GRANT USAGE ON SEQUENCES TO thunderbuddy;
+-
+--- Create any required tables here
+-CREATE TABLE IF NOT EXISTS weather_data (
+-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+-    zip_code VARCHAR(10) NOT NULL,
+-    country_code CHAR(2) NOT NULL,
+-    temperature DECIMAL(5,2),
+-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+-);
+-
+--- Grant permissions on existing tables
+-GRANT SELECT, INSERT, UPDATE, DELETE ON weather_data TO thunderbuddy;
+-
+--- Set ownership of the schema and objects
+-ALTER SCHEMA public OWNER TO thunderbuddy;
+-ALTER TABLE weather_data OWNER TO thunderbuddy; 
+\ No newline at end of file
+diff --git a/scripts/db/init/02-create-tables.sql b/scripts/db/init/02-create-tables.sql
+deleted file mode 100644
+index ab7e792..0000000
+--- a/scripts/db/init/02-create-tables.sql
++++ /dev/null
+@@ -1,51 +0,0 @@
+--- Run as postgres superuser
+--- Create tables and set up permissions
+-
+-\c thunderbuddy;
+-
+--- Create weather_data table
+-CREATE TABLE IF NOT EXISTS public.weather_data (
+-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+-    zip_code VARCHAR(10) NOT NULL,
+-    country_code CHAR(2) NOT NULL,
+-    temperature DECIMAL(5,2),
+-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+-);
+-
+--- Create index for common queries
+-CREATE INDEX IF NOT EXISTS idx_weather_data_zip_country 
+-ON public.weather_data(zip_code, country_code);
+-
+--- Create trigger for updated_at
+-CREATE OR REPLACE FUNCTION update_updated_at_column()
+-RETURNS TRIGGER AS $$
+-BEGIN
+-    NEW.updated_at = CURRENT_TIMESTAMP;
+-    RETURN NEW;
+-END;
+-$$ language 'plpgsql';
+-
+-CREATE TRIGGER update_weather_data_updated_at
+-    BEFORE UPDATE ON public.weather_data
+-    FOR EACH ROW
+-    EXECUTE FUNCTION update_updated_at_column();
+-
+--- Grant specific permissions to application user
+-GRANT SELECT, INSERT, UPDATE, DELETE ON public.weather_data TO thunderbuddy;
+-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO thunderbuddy;
+-
+--- Create versioning table for migrations
+-CREATE TABLE IF NOT EXISTS public.schema_versions (
+-    version INTEGER PRIMARY KEY,
+-    description TEXT NOT NULL,
+-    applied_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+-    applied_by TEXT DEFAULT CURRENT_USER
+-);
+-
+--- Grant read-only access to schema_versions
+-GRANT SELECT ON public.schema_versions TO thunderbuddy;
+-
+--- Record initial schema version
+-INSERT INTO public.schema_versions (version, description)
+-VALUES (1, 'Initial schema setup') ON CONFLICT DO NOTHING; 
+\ No newline at end of file

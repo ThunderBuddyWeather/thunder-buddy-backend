@@ -20,27 +20,24 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
     - name: Login to Docker Hub
       if: inputs.push == 'true'
       shell: bash
       run: |
         echo "${{ inputs.docker_password }}" | docker login --username ${{ inputs.docker_username }} --password-stdin
 
-    - name: Build Docker Image
+    - name: Build and Push
       shell: bash
       run: |
-        docker build \
+        docker buildx build \
+          --platform linux/amd64,linux/arm64 \
           --build-arg ENV_FILE=.env \
-          -t ${{ inputs.image_name }} .
-
-    - name: Tag Docker Image
-      if: inputs.push == 'true'
-      shell: bash
-      run: |
-        docker tag ${{ inputs.image_name }}:latest ${{ inputs.docker_username }}/${{ inputs.image_name }}:latest
-
-    - name: Push Docker Image
-      if: inputs.push == 'true'
-      shell: bash
-      run: |
-        docker push ${{ inputs.docker_username }}/${{ inputs.image_name }}:latest
+          -t ${{ inputs.docker_username }}/${{ inputs.image_name }}:latest \
+          ${{ inputs.push == 'true' && '--push' || '--load' }} \
+          .

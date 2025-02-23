@@ -3,17 +3,16 @@ services:
   db:
     image: postgres:15-alpine
     container_name: thunder-buddy-db
-    env_file:
-      - ${ENV_FILE:-.env.local}
     environment:
-      POSTGRES_DB: postgres # Default database
-      POSTGRES_USER: postgres # Default superuser
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: localdev
+      DB_PASSWORD: localdev
     ports:
       - "5432:5432"
     volumes:
       - thunder_buddy_postgres_15:/var/lib/postgresql/data
-      - ./scripts/db/init:/docker-entrypoint-initdb.d # Init scripts
+      - ./scripts/db/init:/docker-entrypoint-initdb.d
     networks:
       - thunder-buddy-network
     healthcheck:
@@ -23,22 +22,25 @@ services:
       retries: 5
 
   app:
-    image: ${DOCKER_USERNAME}/thunder-buddy:latest
+    image: aasimsyed/thunder-buddy:latest
+    platform: linux/arm64
     container_name: thunder-buddy
-    env_file:
-      - ${ENV_FILE:-.env.local}
-    ports:
-      - "5000:5000"
+    build:
+      context: .
+      dockerfile: Dockerfile
     environment:
-      - DATABASE_URL=postgresql://thunderbuddy:${DB_PASSWORD}@db:5432/thunderbuddy
-      - DB_PASSWORD=${DB_PASSWORD}
+      DATABASE_URL: postgresql://thunderbuddy:localdev@db:5432/thunderbuddy
+      DB_PASSWORD: localdev
+      DOCKER_USERNAME: aasimsyed
+    ports:
+      - "5001:5001"
     depends_on:
       db:
         condition: service_healthy
     networks:
       - thunder-buddy-network
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:5000/health"]
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:5001/health"]
       interval: 10s
       timeout: 5s
       retries: 3

@@ -22,8 +22,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY main.py .
 COPY scripts/ scripts/
 
-# Expose port 5000 so that the container listens on this port at runtime.
-EXPOSE 5000
+# Expose port 5001 so that the container listens on this port at runtime.
+EXPOSE 5001
 
 # Environment variables
 ENV DB_HOST=db \
