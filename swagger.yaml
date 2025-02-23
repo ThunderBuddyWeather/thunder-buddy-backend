@@ -1,0 +1,77 @@
+---
+openapi: 3.0.2
+info:
+  title: Weather API
+  version: 1.0.0
+  description: Weather API service providing current weather data
+  contact:
+    email: your-email@example.com
+paths:
+  /:
+    get:
+      summary: Hello World
+      description: Get a simple greeting message
+      parameters: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  /weather:
+    get:
+      summary: Get Local Weather
+      description: Get current weather data for a given ZIP code and country
+      parameters:
+      - in: query
+        name: zip
+        schema:
+          type: string
+          default: '30152'
+        required: true
+        description: Parameter zip
+      - in: query
+        name: country
+        schema:
+          type: string
+          default: US
+        required: true
+        description: Parameter country
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /health:
+    get:
+      summary: Health Check
+      description: Check the health status of the application
+      parameters: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object

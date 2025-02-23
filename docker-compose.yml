@@ -27,21 +27,28 @@ services:
     env_file:
       - ${ENV_FILE:-.env.local}
     ports:
-      - "5000:5000"
+      - "5001:5001"
     environment:
       - DATABASE_URL=postgresql://thunderbuddy:${DB_PASSWORD}@db:5432/thunderbuddy
       - DB_PASSWORD=${DB_PASSWORD}
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
     depends_on:
       db:
         condition: service_healthy
     networks:
       - thunder-buddy-network
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:5000/health"]
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:5001/health"]
       interval: 10s
       timeout: 5s
       retries: 3
       start_period: 10s
+    volumes:
+      - type: bind
+        source: ./static
+        target: /app/static
+        read_only: true
 
 volumes:
   thunder_buddy_postgres_15:

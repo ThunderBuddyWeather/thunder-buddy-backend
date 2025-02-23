@@ -21,9 +21,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application files
 COPY main.py .
 COPY scripts/ scripts/
+COPY static/ static/
 
-# Expose port 5000 so that the container listens on this port at runtime.
-EXPOSE 5000
+# Copy and set permissions for static files
+RUN chmod -R 755 /app/static
+
+# Expose port 5001 so that the container listens on this port at runtime.
+EXPOSE 5001
 
 # Environment variables
 ENV DB_HOST=db \

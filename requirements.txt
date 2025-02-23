@@ -14,3 +14,8 @@ pylint>=3.0.3
 black>=24.2.0
 mypy>=1.8.0
 isort>=5.13.2
+
+apispec>=6.3.0
+apispec-webframeworks>=0.5.2
+pyyaml>=6.0.1
+flask-swagger-ui>=4.11.1
