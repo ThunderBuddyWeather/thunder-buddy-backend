@@ -417,7 +417,33 @@ Setting up a Python virtual environment is a critical first step for development
 3. Your IDE can provide proper code completion and type hints
 4. Pre-commit hooks and other development tools function properly
 
-#### Creating a Virtual Environment
+#### Automated Setup (Recommended)
+
+The easiest way to set up your development environment is to use the provided setup script:
+
+```bash
+# Run the setup script
+python setup.py
+
+# Or use the Makefile target
+make setup
+```
+
+This script will:
+- Create a Python virtual environment
+- Install all required dependencies
+- Configure automatic virtual environment activation (using direnv)
+- Set up IDE integration for VS Code
+- Provide clear instructions for next steps
+
+For more options:
+```bash
+python setup.py --help
+```
+
+#### Manual Setup
+
+If you prefer to set up your environment manually, follow these steps:
 
 **For Linux/macOS:**
 
@@ -520,6 +546,29 @@ make dev-env
 1. Go to Settings/Preferences → Project → Python Interpreter
 2. Click the gear icon → Add
 3. Select "Existing Environment" and navigate to your virtual environment's Python executable
+
+#### Automatic Virtual Environment Activation
+
+For a smoother development experience, you can set up automatic activation of the virtual environment when entering the project directory using [direnv](https://direnv.net/):
+
+1. Install direnv:
+   - macOS: `brew install direnv`
+   - Linux: `sudo apt-get install direnv` or `sudo yum install direnv`
+   - Windows: `scoop install direnv`
+
+2. Add direnv hook to your shell:
+   - Bash: Add `eval "$(direnv hook bash)"` to your `~/.bashrc`
+   - Zsh: Add `eval "$(direnv hook zsh)"` to your `~/.zshrc`
+   - Fish: Add `direnv hook fish | source` to your `~/.config/fish/config.fish`
+   - PowerShell: Add `Invoke-Expression "$(direnv hook pwsh)"` to your profile
+
+3. Create a `.envrc` file in the project root:
+   ```bash
+   echo 'source_env "venv/bin/activate"' > .envrc
+   direnv allow
+   ```
+
+The `setup.py` script can automate this process for you.
 
 #### Why Both Virtual Environment and Docker?
 

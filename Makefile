@@ -1,4 +1,4 @@
-.PHONY: help test test-unit test-integration lint coverage clean install dev-env yamlint yamlint-fix swagger
+.PHONY: help test test-unit test-integration lint coverage clean install dev-env yamlint yamlint-fix swagger setup
 
 # Default target when just running 'make'
 help:
@@ -11,6 +11,7 @@ help:
 	@echo "  make coverage         - Run tests with coverage report"
 	@echo "  make clean            - Remove Python file artifacts"
 	@echo "  make dev-env          - Set up development environment"
+	@echo "  make setup            - Run the setup.py script to configure the development environment"
 	@echo "  make yamlint          - Run YAML linting"
 	@echo "  make yamlint-fix      - Auto-fix YAML formatting issues"
 	@echo "  make swagger          - Generate Swagger/OpenAPI specification"
@@ -80,6 +81,10 @@ clean:
 dev-env:
 	python -m venv venv
 	. venv/bin/activate && pip install -r requirements.txt
+
+# Run the setup.py script to configure the development environment
+setup:
+	python setup.py
 
 # Run YAML linting
 yamlint:
