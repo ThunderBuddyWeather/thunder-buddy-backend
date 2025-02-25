@@ -96,3 +96,12 @@ def test_db_connection_missing_url():
         # Restore original DATABASE_URL if it existed
         if original_url:
             os.environ["DATABASE_URL"] = original_url
+
+
+@pytest.fixture(scope="session", autouse=True)
+def mock_db_connection():
+    with patch("scripts.db.get_engine") as mock_engine:
+        # Configure the mock to return a working engine
+        mock_conn = mock_engine.return_value.connect.return_value.__enter__.return_value
+        mock_conn.execute.return_value.scalar.return_value = 1
+        yield mock_engine
