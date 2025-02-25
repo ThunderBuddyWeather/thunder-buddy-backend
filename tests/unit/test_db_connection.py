@@ -6,6 +6,7 @@ from unittest.mock import patch
 import psycopg2
 import pytest
 from sqlalchemy import create_engine
+from sqlalchemy.exc import SQLAlchemyError
 
 from scripts.db import test_connection as db_test_connection
 
@@ -24,7 +25,7 @@ def database_url():
 
 
 @pytest.mark.unit
-def test_connection():
+def test_connection_basic():
     """Test basic connection function returns expected structure"""
     result = db_test_connection()
     assert isinstance(result, dict)
@@ -53,6 +54,8 @@ def test_db_connection_success(database_url):
 
         # Run the test
         result = db_test_connection()
+        
+        # Verify results
         assert result["connection"] == "healthy"
         assert result["query"] == "healthy"
         assert "successful" in result["message"]
@@ -61,18 +64,11 @@ def test_db_connection_success(database_url):
 @pytest.mark.unit
 def test_db_connection_failure(database_url):
     """Test database connection failure"""
-    with patch("scripts.db.get_engine", side_effect=psycopg2.Error("Connection failed")):
-        try:
-            result = db_test_connection()
-        except psycopg2.Error:
-            # If the exception is not caught in the test_connection function,
-            # we'll create a result dict that matches what we expect
-            result = {
-                "connection": "unhealthy",
-                "query": "unhealthy",
-                "message": "Database check failed: Connection failed"
-            }
+    with patch("scripts.db.get_engine", side_effect=SQLAlchemyError("Connection failed")):
+        # Run the test - the exception should be caught inside db_test_connection
+        result = db_test_connection()
         
+        # Verify results
         assert result["connection"] == "unhealthy"
         assert result["query"] == "unhealthy"
         assert "failed" in result["message"]
@@ -81,11 +77,22 @@ def test_db_connection_failure(database_url):
 @pytest.mark.unit
 def test_db_connection_missing_url():
     """Test database connection with missing URL"""
+    # Save original DATABASE_URL if it exists
+    original_url = os.environ.get("DATABASE_URL")
     if "DATABASE_URL" in os.environ:
         del os.environ["DATABASE_URL"]
-    with patch("scripts.db.get_database_url", return_value=""):
-        with patch("scripts.db.get_engine", side_effect=ValueError("DATABASE_URL environment variable is not set")):
-            result = db_test_connection()
-            assert result["connection"] == "unhealthy"
-            assert result["query"] == "unhealthy"
-            assert "configuration error" in result["message"]
+    
+    try:
+        with patch("scripts.db.get_database_url", return_value=""):
+            with patch("scripts.db.get_engine", side_effect=ValueError("DATABASE_URL environment variable is not set")):
+                # Run the test
+                result = db_test_connection()
+                
+                # Verify results
+                assert result["connection"] == "unhealthy"
+                assert result["query"] == "unhealthy"
+                assert "configuration error" in result["message"]
+    finally:
+        # Restore original DATABASE_URL if it existed
+        if original_url:
+            os.environ["DATABASE_URL"] = original_url
