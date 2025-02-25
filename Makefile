@@ -87,4 +87,14 @@ swagger:
 	else \
 		echo "Warning: .env.local not found, using default .env"; \
 	fi
-	. venv/bin/activate && python scripts/generate_swagger.py
+	@# Check if we're in a virtual environment already (CI environments often are)
+	@if [ -n "$$VIRTUAL_ENV" ]; then \
+		echo "Using active virtual environment"; \
+		python scripts/generate_swagger.py; \
+	elif [ -f venv/bin/activate ]; then \
+		echo "Activating local virtual environment"; \
+		. venv/bin/activate && python scripts/generate_swagger.py; \
+	else \
+		echo "No virtual environment found, running directly"; \
+		python scripts/generate_swagger.py; \
+	fi

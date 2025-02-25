@@ -37,6 +37,7 @@ jobs:
           echo "DB_NAME=thunder_buddy" >> .env.local
           echo "DB_USERNAME=postgres" >> .env.local
           echo "DB_PASSWORD=placeholder" >> .env.local
+          echo "DATABASE_URL=postgresql://postgres:placeholder@localhost:5432/thunder_buddy" >> .env.local
 
       - name: Generate Swagger documentation
         run: make swagger
