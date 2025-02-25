@@ -7,11 +7,13 @@ import logging
 import os
 from typing import Dict, Tuple
 
-import psycopg2
 import requests  # noqa: E402
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
-from sqlalchemy import create_engine, text
+
+# Import our database module
+from scripts.db import init_db
+from scripts.db import test_connection as check_db_health
 
 try:
     from flask_swagger_ui import get_swaggerui_blueprint
@@ -28,8 +30,6 @@ if get_swaggerui_blueprint:
         SWAGGER_URL, API_URL, config={"app_name": "Thunder Buddy API"}
     )
 
-from scripts.test_db_connection import test_connection  # Add this line
-
 app = Flask(__name__)
 
 # Register Swagger UI blueprint if available
@@ -37,6 +37,9 @@ if get_swaggerui_blueprint:
     app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
 
 load_dotenv()
+
+# Initialize database connection
+init_db()
 
 # fmt: off
 WEATHERBIT_API_KEY = os.getenv("WEATHERBIT_API_KEY",
@@ -92,30 +95,26 @@ def get_local_weather():
         return jsonify({"error": "API request failed"}), 500
 
 
-def check_db_health() -> Dict[str, str]:
-    """
-    Perform comprehensive database health checks
-    Returns: Dictionary with connection and query status
-    """
-    return test_connection()
-
-
 @app.route("/health", methods=["GET"])
 def health_check() -> Tuple[Dict, int]:
     """Check the health of the application by verifying database connectivity."""
     db_health: Dict[str, str] = check_db_health()
 
+    # Determine overall health status based on database connection and query status
+    is_healthy = (
+        db_health["connection"] == "healthy"
+        and db_health["query"] == "healthy"
+    )
+
     health_status = {
-        "status": "healthy" 
-        if db_health["connection"] == "healthy" and db_health["query"] == "healthy"
-        else "unhealthy",
+        "status": "healthy" if is_healthy else "unhealthy",
         "components": {
             "api": {
                 "status": "healthy",
                 "message": "API service is running"
             },
-            "database": db_health
-        }
+            "database": db_health,
+        },
     }
 
     http_status = 200 if health_status["status"] == "healthy" else 503
@@ -123,4 +122,6 @@ def health_check() -> Tuple[Dict, int]:
 
 
 if __name__ == "__main__":
+    # Always use port 5000 inside the container
+    # for consistency with EXPOSE and healthchecks
     app.run(host="0.0.0.0", port=5000, debug=True)

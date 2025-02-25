@@ -1,84 +1,113 @@
-swagger: "2.0"
+---
+openapi: 3.0.2
 info:
-  title: Thunder Buddy API
-  description: API documentation for Thunder Buddy Weather service
-  version: "1.0"
-
-schemes:
-  - http
-
+  title: Weather API
+  version: 1.0.0
+  description: Weather API service providing current weather data
+  contact:
+    email: your-email@example.com
 paths:
+  /apidocs/dist/<path:filename>:
+    get:
+      summary: Send Static File
+      description: The view function used to serve files from
+      parameters: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  /apidocs/<path:path>:
+    get:
+      summary: Show
+      description: Show
+      parameters: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  /apidocs/:
+    get:
+      summary: Show
+      description: Show
+      parameters: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
   /:
     get:
       summary: Hello World
-      description: Returns a simple greeting message.
+      description: Return a simple greeting message
+      parameters: []
       responses:
-        200:
-          description: Success
-          schema:
-            type: object
-            properties:
-              Message:
-                type: string
-                example: "Hello World"
-
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
   /weather:
     get:
       summary: Get Local Weather
-      description: Returns current weather data for a given ZIP code and country.
+      description: Return current weather data for a given ZIP code and country
       parameters:
-        - name: zip
-          in: query
+      - in: query
+        name: zip
+        schema:
           type: string
-          required: true
-          description: ZIP code to get weather for.
-        - name: country
-          in: query
+          default: '30152'
+        required: true
+        description: Parameter zip
+      - in: query
+        name: country
+        schema:
           type: string
-          required: false
-          description: Country code (default is 'US').
+          default: US
+        required: true
+        description: Parameter country
       responses:
-        200:
-          description: Weather data retrieved successfully.
-          schema:
-            type: object
-            properties:
-              data:
-                type: array
-                items:
-                  type: object
-        400:
-          description: ZIP code is required.
-        500:
-          description: API request failed or invalid response format.
-
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
   /health:
     get:
       summary: Health Check
-      description: Checks the health of the application by verifying database connectivity.
+      description: Check the health of the application by verifying database connectivity.
+      parameters: []
       responses:
-        200:
-          description: API is healthy
-          schema:
-            type: object
-            properties:
-              status:
-                type: string
-                example: "healthy"
-              db:
-                type: string
-                example: "connected"
-        500:
-          description: Database connection failed.
-          schema:
-            type: object
-            properties:
-              status:
-                type: string
-                example: "unhealthy"
-              db:
-                type: string
-                example: "disconnected"
-              error:
-                type: string
-                example: "Database connection error message"
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object

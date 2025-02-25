@@ -1,13 +1,12 @@
-flask==3.1.0
-python-dotenv==1.0.1
-requests==2.32.3
+flask>=3.1.0
+python-dotenv>=1.0.1
+requests>=2.32.3
 pytest>=8.0.0
 pytest-mock>=3.14.0
 pytest-cov>=6.0.0
-faker==36.1.1
+faker>=36.1.1
 psycopg2-binary>=2.9.9
-SQLAlchemy==2.0.27
-flask-swagger-ui==4.11.1
+SQLAlchemy>=2.0.27
 
 # Linting tools
 flake8>=7.0.0
@@ -15,3 +14,9 @@ pylint>=3.0.3
 black>=24.2.0
 mypy>=1.8.0
 isort>=5.13.2
+
+# API Documentation
+apispec>=6.3.0
+apispec-webframeworks>=0.5.2
+PyYAML>=6.0.1
+flask-swagger-ui>=4.11.1
