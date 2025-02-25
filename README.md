@@ -468,6 +468,50 @@ docker compose exec -T db psql -U [username] -d thunderbuddy < ./path/to/data.sq
    docker compose exec api alembic upgrade head
    ```
 
+5. **When to Rebuild or Restart Containers**:
+
+   During development, you'll encounter situations where you need to either rebuild images or restart containers:
+
+   **When to Rebuild Docker Images** (`docker compose build`):
+   - After modifying the `Dockerfile` or build configuration
+   - When adding new dependencies to `requirements.txt`
+   - When changing system-level configurations
+   - After updating environment variables that affect the build process
+
+   ```bash
+   # Rebuild a specific service
+   docker compose build app
+   
+   # Rebuild all services without using cache (complete rebuild)
+   docker compose build --no-cache
+   ```
+
+   **When to Restart Containers** (`docker compose restart`):
+   - After making configuration changes that aren't automatically detected
+   - When services become unresponsive but don't require a full rebuild
+   - After manually updating environment variables in `.env.local`
+   - When you need to reset the application state without losing data
+
+   ```bash
+   # Restart a specific service
+   docker compose restart app
+   
+   # Restart all services
+   docker compose restart
+   ```
+
+   **When Neither is Needed**:
+   - For most code changes during development (Flask's debug mode auto-reloads)
+   - When modifying static files or templates
+   - When making database changes through migrations
+   - When updating documentation or non-executable files
+
+   **Why This Matters**:
+   - **Efficiency**: Rebuilding images is time-consuming and unnecessary for most code changes
+   - **Data Persistence**: Proper restart practices preserve your development data
+   - **Dependency Management**: Ensures all services have the correct dependencies
+   - **Debugging**: Helps isolate issues related to configuration vs. code
+
 ### Swagger Documentation Automation
 
 Thunder Buddy uses OpenAPI/Swagger for API documentation, with several automation features to ensure documentation stays in sync with the codebase:
@@ -556,6 +600,7 @@ Thunder Buddy uses OpenAPI/Swagger for API documentation, with several automatio
    - Status codes (200, 400, 401, 500) from the docstring and return statements
 
    **Example with Path Parameters and Request Body**:
+
    ```python
    @app.route("/users/<user_id>/alerts", methods=["POST"])
    def create_user_alert(user_id):
