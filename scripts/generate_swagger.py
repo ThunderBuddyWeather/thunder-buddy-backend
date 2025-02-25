@@ -28,9 +28,16 @@ from flask import Flask, request
 # Load environment variables from .env.local if it exists
 env_path = os.path.join(root_dir, ".env.local")
 if os.path.exists(env_path):
+    print(f"Loading environment from {env_path}")
     load_dotenv(env_path)
 else:
+    print("Loading environment from default .env")
     load_dotenv()  # fallback to .env
+
+# Ensure DATABASE_URL is set for Swagger generation
+if not os.environ.get("DATABASE_URL"):
+    print("Setting DATABASE_URL for Swagger generation")
+    os.environ["DATABASE_URL"] = "postgresql://postgres:placeholder@localhost:5432/thunder_buddy"
 
 # Import app after environment is loaded
 try:
