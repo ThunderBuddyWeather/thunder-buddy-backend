@@ -122,4 +122,6 @@ def health_check() -> Tuple[Dict, int]:
 
 
 if __name__ == "__main__":
+    # Always use port 5000 inside the container for consistency with EXPOSE and healthchecks
+    # Explicitly ignore FLASK_PORT environment variable to ensure consistency
     app.run(host="0.0.0.0", port=5000, debug=True)

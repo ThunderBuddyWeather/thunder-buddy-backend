@@ -41,15 +41,15 @@ def test_connection(database_url=None) -> Dict[str, str]:
         # Test query execution
         engine = create_engine(conn_url)
         with engine.connect() as connection:
-            result = connection.execute(text("SELECT 1")).scalar()
-            if result == 1:
+            query_result = connection.execute(text("SELECT 1")).scalar()
+            if query_result == 1:
                 db_status["query"] = "healthy"
                 db_status["message"] = "Database connection and query successful"
             else:
                 db_status["message"] = "Query returned unexpected result"
 
-    except (psycopg2.Error, KeyError) as e:
-        db_status["message"] = f"Database check failed: {str(e)}"
+    except (psycopg2.Error, KeyError) as error:
+        db_status["message"] = f"Database check failed: {str(error)}"
 
     return db_status
 
