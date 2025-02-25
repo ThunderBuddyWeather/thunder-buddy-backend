@@ -21,7 +21,17 @@ install:
 
 # Run all tests
 test:
-	python -m pytest -v
+	@echo "Checking if database is running..."
+	@if ! docker ps | grep -q thunder-buddy-db; then \
+		echo "Starting database container for integration tests..."; \
+		docker-compose up -d db; \
+		echo "Waiting for database to be ready..."; \
+		sleep 5; \
+	else \
+		echo "Database container is already running."; \
+	fi
+	@echo "Running tests with DATABASE_URL set for integration tests..."
+	DATABASE_URL="postgresql://thunderbuddy:localdev@localhost:5432/thunderbuddy" python -m pytest -v
 
 # Run unit tests only
 test-unit:
@@ -29,7 +39,17 @@ test-unit:
 
 # Run integration tests only
 test-integration:
-	python -m pytest tests/integration/ -v -m integration
+	@echo "Checking if database is running..."
+	@if ! docker ps | grep -q thunder-buddy-db; then \
+		echo "Starting database container for integration tests..."; \
+		docker-compose up -d db; \
+		echo "Waiting for database to be ready..."; \
+		sleep 5; \
+	else \
+		echo "Database container is already running."; \
+	fi
+	@echo "Running integration tests with DATABASE_URL set..."
+	DATABASE_URL="postgresql://thunderbuddy:localdev@localhost:5432/thunderbuddy" python -m pytest tests/integration/ -v -m integration
 
 # Run linting
 lint:
