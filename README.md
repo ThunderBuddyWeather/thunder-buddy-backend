@@ -2,6 +2,39 @@
 
 Mobile application for tracking extreme weather events and notifying friends and family that you are safe.
 
+## Table of Contents
+
+- [Thunder Buddy Backend](#thunder-buddy-backend)
+  - [Key Features](#key-features)
+  - [Technical Stack](#technical-stack)
+  - [Architecture](#architecture)
+  - [Performance Features](#performance-features)
+- [Docker Setup Instructions](#docker-setup-instructions)
+  - [Why Containerization?](#why-containerization)
+  - [For Mac Users](#for-mac-users)
+  - [For Windows Users](#for-windows-users)
+  - [Running the Application Locally](#running-the-application-locally)
+  - [Troubleshooting](#troubleshooting)
+  - [Development Best Practices](#development-best-practices)
+- [Environment Variables](#environment-variables)
+  - [Setting Up Environment Variables](#setting-up-environment-variables)
+  - [Loading Environment Variables](#loading-environment-variables)
+  - [Verifying Environment Variables](#verifying-environment-variables)
+  - [Using Start/Stop Scripts](#using-startstop-scripts)
+- [Local Development Guide](#local-development-guide)
+  - [Container Architecture](#container-architecture)
+  - [Connecting to the Database](#connecting-to-the-database)
+  - [API Development Workflow](#api-development-workflow)
+  - [Swagger Documentation Automation](#swagger-documentation-automation)
+  - [Connecting to Remote Environments](#connecting-to-remote-environments)
+  - [Common Development Tasks](#common-development-tasks)
+- [Windows-Specific Development Guide](#windows-specific-development-guide)
+  - [Setting Up WSL 2 (Recommended)](#setting-up-wsl-2-recommended)
+  - [Windows Path and File Permissions](#windows-path-and-file-permissions)
+  - [Windows PowerShell Tips](#windows-powershell-tips)
+  - [Windows Troubleshooting](#windows-troubleshooting)
+  - [Using Windows Terminal (Recommended)](#using-windows-terminal-recommended)
+
 ## Thunder Buddy Backend
 
 The Thunder Buddy Backend is a robust, scalable REST API service built with modern architecture and best practices. It powers the Thunder Buddy mobile application by providing real-time weather alerts, user management, and safety notification features.
