@@ -22,6 +22,7 @@ Mobile application for tracking extreme weather events and notifying friends and
   - [Verifying Environment Variables](#verifying-environment-variables)
   - [Using Start/Stop Scripts](#using-startstop-scripts)
 - [Local Development Guide](#local-development-guide)
+  - [Python Virtual Environment Setup](#python-virtual-environment-setup)
   - [Container Architecture](#container-architecture)
   - [Connecting to the Database](#connecting-to-the-database)
   - [API Development Workflow](#api-development-workflow)
@@ -406,6 +407,131 @@ These scripts provide the following benefits:
 ## Local Development Guide
 
 This section provides detailed instructions for backend developers working with the Thunder Buddy containers locally.
+
+### Python Virtual Environment Setup
+
+Setting up a Python virtual environment is a critical first step for development, even when using Docker. The virtual environment ensures that:
+
+1. Your local development tools (linters, formatters, etc.) work correctly
+2. You can run tests and scripts locally without Docker when needed
+3. Your IDE can provide proper code completion and type hints
+4. Pre-commit hooks and other development tools function properly
+
+#### Creating a Virtual Environment
+
+**For Linux/macOS:**
+
+```bash
+# Navigate to the project directory
+cd thunder-buddy-backend
+
+# Create a virtual environment
+python -m venv venv
+
+# Activate the virtual environment
+source venv/bin/activate
+
+# Verify activation (should show the virtual environment path)
+which python
+```
+
+**For Windows (Command Prompt):**
+
+```cmd
+# Navigate to the project directory
+cd thunder-buddy-backend
+
+# Create a virtual environment
+python -m venv venv
+
+# Activate the virtual environment
+venv\Scripts\activate.bat
+
+# Verify activation (should show the virtual environment path)
+where python
+```
+
+**For Windows (PowerShell):**
+
+```powershell
+# Navigate to the project directory
+cd thunder-buddy-backend
+
+# Create a virtual environment
+python -m venv venv
+
+# Activate the virtual environment
+.\venv\Scripts\Activate.ps1
+
+# Verify activation (should show the virtual environment path)
+Get-Command python | Format-List
+```
+
+#### Installing Dependencies
+
+After activating your virtual environment, install the project dependencies:
+
+```bash
+# Install all dependencies from requirements.txt
+pip install -r requirements.txt
+
+# Verify installation
+pip list
+```
+
+#### Installing Development Dependencies
+
+For development, you may want to install additional tools:
+
+```bash
+# Install development dependencies
+pip install -r requirements-dev.txt  # If available
+# Or install common development tools
+pip install black flake8 pytest pytest-cov isort mypy
+```
+
+#### Keeping Dependencies Updated
+
+When pulling changes from the repository, make sure to update your dependencies:
+
+```bash
+# Update dependencies after pulling changes
+pip install -r requirements.txt --upgrade
+```
+
+#### Using Make for Environment Setup
+
+The project includes a Makefile target for setting up the development environment:
+
+```bash
+# Set up development environment (creates venv and installs dependencies)
+make dev-env
+```
+
+#### IDE Integration
+
+**For VS Code:**
+1. Select the Python interpreter from your virtual environment:
+   - Press `Ctrl+Shift+P` (Windows/Linux) or `Cmd+Shift+P` (macOS)
+   - Type "Python: Select Interpreter"
+   - Choose the interpreter from your virtual environment
+
+**For PyCharm:**
+1. Go to Settings/Preferences → Project → Python Interpreter
+2. Click the gear icon → Add
+3. Select "Existing Environment" and navigate to your virtual environment's Python executable
+
+#### Why Both Virtual Environment and Docker?
+
+While Docker provides a consistent runtime environment, a local virtual environment offers several advantages:
+
+- **Development Tools**: Many development tools work better when installed locally
+- **IDE Integration**: Better code completion, type checking, and navigation
+- **Quick Testing**: Run simple tests without starting Docker containers
+- **Git Hooks**: Pre-commit hooks run in your local environment
+- **Offline Development**: Work without Docker when needed
+
+The combination of a local virtual environment and Docker containers provides the best of both worlds: consistent runtime environments and efficient local development.
 
 ### Container Architecture
 
