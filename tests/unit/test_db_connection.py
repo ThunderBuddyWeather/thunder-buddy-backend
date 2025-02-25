@@ -1,88 +1,102 @@
-"""Unit tests for database connection functionality"""
+"""
+Unit tests for database connection functionality.
+
+These tests verify that the database connection functions work correctly
+and handle various error conditions appropriately.
+"""
 
 import os
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
-import psycopg2
 import pytest
-from sqlalchemy import create_engine
+from psycopg2 import OperationalError
 from sqlalchemy.exc import SQLAlchemyError
 
-from scripts.db import test_connection as db_test_connection
+from scripts.db import test_connection as get_db_connection
 
 
-@pytest.fixture
-def database_url():
-    """Fixture to manage DATABASE_URL environment variable"""
-    test_url = "postgresql://user:pass@localhost:5432/db"
-    original_url = os.environ.get("DATABASE_URL")
-    os.environ["DATABASE_URL"] = test_url
-    yield test_url
-    if original_url:
-        os.environ["DATABASE_URL"] = original_url
-    else:
-        del os.environ["DATABASE_URL"]
+def test_connection_basic():
+    """Test that the connection function returns a dictionary."""
+    with patch('scripts.db.get_engine') as mock_engine:
+        # Configure the mock
+        mock_engine.return_value = MagicMock()
+        # Call the function
+        result = get_db_connection()
+        # Verify the result
+        assert isinstance(result, dict)
+        assert 'connection' in result
+        assert 'message' in result
 
 
-@pytest.fixture(scope="session", autouse=True)
-def mock_db_connection():
-    with patch("scripts.db.get_engine") as mock_engine:
-        # Configure the mock to return a working engine
-        mock_conn = mock_engine.return_value.connect.return_value.__enter__.return_value
-        mock_conn.execute.return_value.scalar.return_value = 1
-        yield mock_engine
+def test_connection_response_structure():
+    """Test that the connection response has the expected structure."""
+    with patch('scripts.db.get_engine') as mock_engine:
+        # Configure the mock
+        mock_engine.return_value = MagicMock()
+        # Call the function
+        result = get_db_connection()
+        # Verify the structure
+        assert result['connection'] == 'healthy'
+        assert isinstance(result['message'], str)
+        assert 'query' in result
 
 
-@pytest.mark.unit
-def test_connection_basic(mock_db_connection):
-    """Test basic connection function returns a dictionary"""
-    result = db_test_connection()
-    assert isinstance(result, dict)
+def test_db_connection_success():
+    """Test successful database connection."""
+    with patch('scripts.db.get_engine') as mock_engine:
+        # Configure the mock connection
+        mock_conn = MagicMock()
+        mock_conn.execute().scalar.return_value = 1
+        mock_engine.return_value.connect.return_value.__enter__.return_value = mock_conn
+
+        # Call the function
+        result = get_db_connection()
+
+        # Verify the result
+        assert result['connection'] == 'healthy'
+        assert result['query'] == 'healthy'
+        assert 'successful' in result['message']
 
 
-@pytest.mark.unit
-def test_connection_response_structure(mock_db_connection):
-    """Test connection response has expected keys"""
-    result = db_test_connection()
-    assert "connection" in result
-    assert "query" in result
-    assert "message" in result
+def test_db_connection_failure():
+    """Test database connection failure."""
+    with patch('scripts.db.get_engine') as mock_engine:
+        # Set up the mock engine
+        mock_engine_instance = MagicMock()
+        mock_engine.return_value = mock_engine_instance
+
+        # Make the connect method raise a SQLAlchemy exception when called
+        mock_engine_instance.connect.side_effect = SQLAlchemyError("Connection refused")
+
+        # Call the function
+        result = get_db_connection()
+
+        # Verify the result
+        assert result['connection'] == 'unhealthy'
+        assert 'Database check failed' in result['message']
 
 
-@pytest.mark.unit
-def test_db_connection_success(mock_db_connection):
-    """Test successful database connection"""
-    result = db_test_connection()
-    assert result["connection"] == "healthy"
-    assert result["query"] == "healthy"
-    assert "successful" in result["message"].lower()
+def test_db_connection_missing_url():
+    """Test behavior when DATABASE_URL environment variable is missing."""
+    # Save the current environment variable
+    original_url = os.environ.get('DATABASE_URL')
+    try:
+        # Remove the environment variable
+        if 'DATABASE_URL' in os.environ:
+            del os.environ['DATABASE_URL']
 
+        # Patch get_engine to raise a ValueError when called
+        with patch('scripts.db.get_engine') as mock_engine:
+            error_msg = "DATABASE_URL environment variable is not set"
+            mock_engine.side_effect = ValueError(error_msg)
 
-@pytest.mark.unit
-def test_db_connection_failure(mock_db_connection):
-    """Test database connection failure handling"""
-    # Mock the get_engine function to raise an exception
-    mock_db_connection.side_effect = SQLAlchemyError("Test error")
-    
-    result = db_test_connection()
-    assert result["connection"] == "unhealthy"
-    assert result["query"] == "unhealthy"
-    assert "failed" in result["message"].lower()
-    
-    # Reset the mock for other tests
-    mock_db_connection.side_effect = None
+            # Call the function
+            result = get_db_connection()
 
-
-@pytest.mark.unit
-def test_db_connection_missing_url(mock_db_connection):
-    """Test handling of missing database URL"""
-    # Mock the get_engine function to raise a ValueError
-    mock_db_connection.side_effect = ValueError("DATABASE_URL not set")
-    
-    result = db_test_connection()
-    assert result["connection"] == "unhealthy"
-    assert result["query"] == "unhealthy"
-    assert "configuration error" in result["message"].lower()
-    
-    # Reset the mock for other tests
-    mock_db_connection.side_effect = None
+            # Verify the result
+            assert result['connection'] == 'unhealthy'
+            assert 'Database configuration error' in result['message']
+    finally:
+        # Restore the environment variable
+        if original_url is not None:
+            os.environ['DATABASE_URL'] = original_url

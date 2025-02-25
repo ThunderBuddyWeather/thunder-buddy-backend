@@ -2,8 +2,9 @@
 """
 ThunderBuddy Setup Script
 
-This script automates the setup of a Python virtual environment for the ThunderBuddy backend.
-It also configures automatic activation of the virtual environment when entering the repository directory.
+This script sets up a Python virtual environment for the ThunderBuddy\nbackend.
+It also configures automatic activation of the virtual environment when entering the
+repository directory.
 
 Features:
 - Creates and configures a Python virtual environment
@@ -75,10 +76,8 @@ class ThunderBuddySetup:
         self._print_header()
         self._setup_venv()
         self._install_dependencies()
-        
         if self.auto_activate:
             self._setup_auto_activation()
-        
         self._setup_ide_integration()
         self._print_success()
 
@@ -91,7 +90,6 @@ class ThunderBuddySetup:
     def _setup_venv(self):
         """Set up the virtual environment."""
         print("🔧 Setting up Python virtual environment...")
-        
         if self.venv_dir.exists():
             if self.force:
                 print("  ↪ Removing existing virtual environment...")
@@ -100,7 +98,6 @@ class ThunderBuddySetup:
                 print("  ↪ Virtual environment already exists.")
                 print("  ↪ Use --force to recreate it if needed.")
                 return
-        
         print("  ↪ Creating new virtual environment...")
         venv.create(self.venv_dir, with_pip=True)
         print("  ✅ Virtual environment created successfully!")
@@ -108,32 +105,28 @@ class ThunderBuddySetup:
     def _install_dependencies(self):
         """Install project dependencies."""
         print("\n📦 Installing dependencies...")
-        
         # Upgrade pip first
         self._run_venv_command(["-m", "pip", "install", "--upgrade", "pip"])
-        
         # Install requirements
         if Path("requirements.txt").exists():
             print("  ↪ Installing packages from requirements.txt...")
             self._run_venv_command(["-m", "pip", "install", "-r", "requirements.txt"])
-        
         # Install development requirements if they exist
         if Path("requirements-dev.txt").exists():
             print("  ↪ Installing development packages from requirements-dev.txt...")
-            self._run_venv_command(["-m", "pip", "install", "-r", "requirements-dev.txt"])
-        
+            self._run_venv_command([
+                "-m", "pip", "install", "-r", "requirements-dev.txt"
+            ])
         print("  ✅ Dependencies installed successfully!")
 
     def _setup_auto_activation(self):
         """Set up automatic virtual environment activation."""
         print("\n🔄 Setting up automatic virtual environment activation...")
-        
         # Setup direnv for auto-activation
         if self._is_command_available("direnv"):
             self._setup_direnv()
         else:
             self._install_direnv()
-            
         print("  ✅ Automatic activation configured!")
 
     def _is_command_available(self, command):
@@ -152,7 +145,6 @@ class ThunderBuddySetup:
     def _install_direnv(self):
         """Provide instructions for installing direnv."""
         print("  ↪ direnv is not installed. Installing or providing instructions...")
-        
         if self.is_mac:
             if self._is_command_available("brew"):
                 print("  ↪ Installing direnv via Homebrew...")
@@ -172,11 +164,10 @@ class ThunderBuddySetup:
                 print("    or")
                 print("    $ sudo yum install direnv")
         elif self.is_windows:
-            print("  ℹ️ For Windows, we recommend using PowerShell and installing direnv via scoop:")
+            print("  ℹ️ For Windows, install direnv via PowerShell:")
             print("    $ scoop install direnv")
             print("    Or you can use the manual activation method described below.")
-        
-        print("\n  ℹ️ After installing direnv, add this to your shell configuration file:")
+        print("\n  ℹ️ After installing direnv, add to shell config:")
         if self.is_windows:
             print('    Add to your PowerShell profile: eval "$(direnv hook pwsh)"')
         else:
@@ -187,38 +178,31 @@ class ThunderBuddySetup:
     def _setup_direnv(self):
         """Set up direnv for automatic virtual environment activation."""
         print("  ↪ Configuring direnv...")
-        
         # Create .envrc file
         envrc_path = self.project_root / ".envrc"
         relative_path = os.path.relpath(self.activate_script, self.project_root)
-        
         with open(envrc_path, "w") as f:
             if self.is_windows:
                 f.write(f'source_env "{relative_path}"\n')
             else:
                 f.write(f'source_env "{relative_path}"\n')
-        
         # Allow direnv in this directory
         try:
             subprocess.run(["direnv", "allow"], check=False)
         except (subprocess.SubprocessError, FileNotFoundError):
             pass
-        
         # Add .envrc to .gitignore if it's not already there
         self._add_to_gitignore(".envrc")
 
     def _add_to_gitignore(self, entry):
         """Add an entry to .gitignore if it doesn't exist."""
         gitignore_path = self.project_root / ".gitignore"
-        
         if not gitignore_path.exists():
             with open(gitignore_path, "w") as f:
                 f.write(f"{entry}\n")
             return
-        
         with open(gitignore_path, "r") as f:
             content = f.read()
-        
         if entry not in content:
             with open(gitignore_path, "a") as f:
                 f.write(f"\n{entry}\n")
@@ -226,24 +210,22 @@ class ThunderBuddySetup:
     def _setup_ide_integration(self):
         """Set up IDE integration for VS Code and PyCharm."""
         print("\n🔌 Setting up IDE integration...")
-        
         # VS Code integration
         vscode_dir = self.project_root / ".vscode"
         if not vscode_dir.exists():
             vscode_dir.mkdir()
-        
         settings_path = vscode_dir / "settings.json"
         if not settings_path.exists():
             with open(settings_path, "w") as f:
                 f.write('{\n')
-                f.write(f'    "python.defaultInterpreterPath": "{self.python_executable}",\n')
-                f.write(f'    "python.terminal.activateEnvironment": true,\n')
-                f.write(f'    "python.linting.enabled": true,\n')
-                f.write(f'    "python.linting.pylintEnabled": true,\n')
-                f.write(f'    "python.linting.flake8Enabled": true,\n')
-                f.write(f'    "python.formatting.provider": "black"\n')
+                f.write('    "python.defaultInterpreterPath": "{0}",\n'.format(
+                    self.python_executable))
+                f.write('    "python.terminal.activateEnvironment": true,\n')
+                f.write('    "python.linting.enabled": true,\n')
+                f.write('    "python.linting.pylintEnabled": true,\n')
+                f.write('    "python.linting.flake8Enabled": true,\n')
+                f.write('    "python.formatting.provider": "black"\n')
                 f.write('}\n')
-        
         print("  ✅ IDE integration configured!")
 
     def _run_venv_command(self, args):
@@ -256,11 +238,9 @@ class ThunderBuddySetup:
         print("\n" + "=" * 80)
         print("🎉 ThunderBuddy Development Environment Setup Complete! 🎉".center(80))
         print("=" * 80 + "\n")
-        
         print("📋 Next Steps:")
-        
         if self.auto_activate:
-            print("  1. Close and reopen your terminal, or run 'direnv allow' in this directory")
+            print("  1. Close and reopen your terminal, or run 'direnv allow'")
             print("     to activate the virtual environment automatically.")
         else:
             if self.is_windows:
@@ -269,33 +249,37 @@ class ThunderBuddySetup:
             else:
                 print("  1. Activate the virtual environment manually:")
                 print(f"     $ source {self.venv_dir}/bin/activate")
-        
         print("  2. Start developing with ThunderBuddy!")
         print("     - Run 'make test' to verify your setup")
         print("     - Run 'make lint' to check code quality")
         print("     - Run 'make help' to see all available commands")
-        
         print("\n💡 For VS Code users:")
         print("  - The Python interpreter is already configured")
         print("  - Restart VS Code or reload the window to apply changes")
-        
         print("\n💡 For PyCharm users:")
         print("  - Go to Settings → Project → Python Interpreter")
         print("  - Click the gear icon → Add → Existing Environment")
         print(f"  - Select the interpreter at: {self.python_executable}")
-        
         print("\n📚 For more information, refer to the README.md file.")
         print("=" * 80 + "\n")
 
 
 def main():
     """Main entry point for the setup script."""
-    parser = argparse.ArgumentParser(description="Set up ThunderBuddy development environment")
-    parser.add_argument("--force", action="store_true", help="Force recreation of virtual environment")
-    parser.add_argument("--no-auto-activate", action="store_true", help="Skip setting up automatic activation")
-    
+    parser = argparse.ArgumentParser(
+        description="Set up ThunderBuddy development environment"
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force recreation of virtual environment"
+    )
+    parser.add_argument(
+        "--no-auto-activate",
+        action="store_true",
+        help="Skip setting up automatic activation"
+    )
     args = parser.parse_args()
-    
     setup = ThunderBuddySetup(
         force=args.force,
         auto_activate=not args.no_auto_activate
@@ -304,4 +288,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()
