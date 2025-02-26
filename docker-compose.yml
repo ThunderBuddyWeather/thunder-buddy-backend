@@ -17,7 +17,7 @@ services:
       - DATABASE_URL=postgresql://thunderbuddy:${DB_PASSWORD:-localdev}@db:5432/thunderbuddy
       - WEATHERBIT_API_KEY=${WEATHERBIT_API_KEY}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      test: ["CMD", "curl", "-f", "http://0.0.0.0:5000/health"]
       interval: 10s
       timeout: 5s
       retries: 3

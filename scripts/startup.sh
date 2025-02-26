@@ -2,6 +2,10 @@
 # Startup script for Thunder Buddy application
 # This script initializes the database and starts the application
 
+# Enable command tracing for debugging
+set -x
+
+# Exit on error
 set -e
 
 echo "Starting Thunder Buddy application..."
@@ -32,13 +36,25 @@ echo "Database is available, initializing..."
 # Initialize database user and permissions
 echo "Running database initialization script..."
 python scripts/init_db_user.py
-if [ $? -ne 0 ]; then
-    echo "Error: Database initialization failed"
+INIT_RESULT=$?
+if [ $INIT_RESULT -ne 0 ]; then
+    echo "Error: Database initialization failed with exit code $INIT_RESULT"
     exit 1
 fi
 
 echo "Database initialized successfully"
 
+# Test database connection before starting the application
+echo "Testing database connection..."
+python -c "from scripts.db import test_connection; print(test_connection())"
+DB_TEST_RESULT=$?
+if [ $DB_TEST_RESULT -ne 0 ]; then
+    echo "Error: Database connection test failed with exit code $DB_TEST_RESULT"
+    exit 1
+fi
+
 # Start the application
 echo "Starting Flask application..."
-python main.py 
+# Use exec to replace the shell process with the Flask app
+# This ensures signals are properly passed to the Flask process
+exec python main.py 

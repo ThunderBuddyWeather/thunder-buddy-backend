@@ -161,10 +161,26 @@ runs:
           echo "Container logs:"
           docker logs thunder-buddy --tail 50
 
+          # Check container network settings
+          echo "Container network settings:"
+          docker inspect thunder-buddy --format='{{json .NetworkSettings.Networks}}' | jq
+
+          # Check if the container is listening on port 5000
+          echo "Checking if container is listening on port 5000:"
+          docker exec thunder-buddy netstat -tulpn | grep 5000 || echo "netstat not found, trying ss" && docker exec thunder-buddy ss -tulpn | grep 5000 || echo "Port 5000 not found in listening ports"
+
+          # Try to access the health endpoint from inside the container
+          echo "Trying to access health endpoint from inside the container:"
+          docker exec thunder-buddy curl -v http://0.0.0.0:5000/health || echo "curl failed inside container"
+
+          # Check if the application started properly
+          echo "Checking if Flask application started:"
+          docker exec thunder-buddy ps aux | grep python || echo "ps not found, trying pgrep" && docker exec thunder-buddy pgrep -a python || echo "No Python processes found"
+
           # Increase timeout for health check (from 30 to 60 iterations)
           for i in {1..60}; do
             echo "Health check attempt $i/60..."
-            HEALTH_RESPONSE=$(curl -s http://localhost:$APP_PORT/health)
+            HEALTH_RESPONSE=$(curl -v http://localhost:$APP_PORT/health)
             echo "Health response: $HEALTH_RESPONSE"
             
             if echo "$HEALTH_RESPONSE" | grep -q "healthy"; then
@@ -175,7 +191,12 @@ runs:
             if [ $i -eq 60 ]; then
               echo "Error: Application failed to become healthy after 60 attempts"
               echo "Checking database connection from inside container..."
-              docker exec thunder-buddy python -c "from scripts.db import test_connection; print(test_connection())"
+              docker exec thunder-buddy python -c "from scripts.db import test_connection; print(test_connection())" || echo "Failed to run database connection test"
+              
+              # Check if the database is accessible from the app container
+              echo "Testing database connectivity from app container:"
+              docker exec thunder-buddy pg_isready -h db -U thunderbuddy -d thunderbuddy || echo "Database connectivity test failed"
+              
               docker compose logs
               exit 1
             fi

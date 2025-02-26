@@ -3,7 +3,16 @@
 FROM python:3.12-slim
 
 # Install curl, wget, and PostgreSQL client tools for database initialization
-RUN apt-get update && apt-get install -y curl wget postgresql-client && rm -rf /var/lib/apt/lists/*
+# Also install net-tools for network debugging (netstat) and procps for process inspection (ps)
+RUN apt-get update && apt-get install -y \
+  curl \
+  wget \
+  postgresql-client \
+  net-tools \
+  procps \
+  iproute2 \
+  jq \
+  && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory inside the container.
 # All subsequent commands run within this directory.

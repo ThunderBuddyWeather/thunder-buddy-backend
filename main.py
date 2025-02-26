@@ -5,21 +5,33 @@ Provides current weather data through REST endpoints
 
 import logging
 import os
+import sys
 from typing import Dict, Tuple
 
 import requests  # noqa: E402
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 
+# Configure logging first
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
+
 # Import our database module
-from scripts.db import init_db
-from scripts.db import test_connection as check_db_health
+try:
+    from scripts.db import init_db
+    from scripts.db import test_connection as check_db_health
+except Exception as e:
+    logger.error(f"Failed to import database modules: {str(e)}")
+    sys.exit(1)
 
 try:
     from flask_swagger_ui import get_swaggerui_blueprint
 except ImportError:
     get_swaggerui_blueprint = None
-    logging.warning("flask-swagger-ui not installed. API docs will not be available.")
+    logger.warning("flask-swagger-ui not installed. API docs will not be available.")
 
 # Swagger UI setup
 SWAGGER_URL = "/apidocs"
@@ -37,23 +49,28 @@ if get_swaggerui_blueprint:
     app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
 
 # Try to load from .env.local first, then fall back to .env
+logger.info("Loading environment variables")
 if os.path.exists(".env.local"):
     load_dotenv(dotenv_path=".env.local")
+    logger.info("Loaded environment from .env.local")
 else:
     load_dotenv()  # Default .env file
+    logger.info("Loaded environment from .env")
 
 # Initialize database connection
-init_db()
+try:
+    logger.info("Initializing database connection")
+    init_db()
+    logger.info("Database connection initialized successfully")
+except Exception as e:
+    logger.error(f"Failed to initialize database: {str(e)}")
+    sys.exit(1)
 
 # fmt: off
 # Use environment variable with fallback for deployment scenarios
 WEATHERBIT_API_KEY = os.getenv("WEATHERBIT_API_KEY", "d0f6ba4e6ca24b08a0896b004a08b2ac")
 timeout = int(os.getenv("REQUEST_TIMEOUT", "10"))  # Default as string "10"
 # fmt: on
-
-# Configure logging
-logging.basicConfig(level=logging.ERROR)
-
 
 @app.route("/", methods=["GET"])
 def hello_world():
@@ -150,4 +167,5 @@ def health_check() -> Tuple[Dict, int]:
 if __name__ == "__main__":
     # Always use port 5000 inside the container
     # for consistency with EXPOSE and healthchecks
+    logger.info("Starting Flask application on 0.0.0.0:5000")
     app.run(host="0.0.0.0", port=5000, debug=True)
