@@ -13,6 +13,9 @@ WORKDIR /app
 # This file lists all the Python dependencies your app requires.
 COPY requirements.txt .
 
+# Copy the .env.ci file into the container.
+COPY .env.ci .
+
 # Install Python dependencies specified in requirements.txt.
 # The --no-cache-dir flag prevents pip from caching package downloads,
 # which helps reduce the final image size.

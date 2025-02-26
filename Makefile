@@ -12,6 +12,7 @@ help:
 	@echo "  make clean            - Remove Python file artifacts"
 	@echo "  make dev-env          - Set up development environment"
 	@echo "  make setup            - Run the setup.py script to configure the development environment"
+	@echo "  make setup            - Run the setup.py script to configure the development environment"
 	@echo "  make yamlint          - Run YAML linting"
 	@echo "  make yamlint-fix      - Auto-fix YAML formatting issues"
 	@echo "  make swagger          - Generate Swagger/OpenAPI specification"
@@ -54,6 +55,8 @@ test-integration:
 
 # Run linting
 lint:
+	flake8 .
+	pylint --ignore=venv,env,.venv,.env,build,dist --rcfile=.pylintrc **/*.py
 	flake8 .
 	pylint --ignore=venv,env,.venv,.env,build,dist --rcfile=.pylintrc **/*.py
 

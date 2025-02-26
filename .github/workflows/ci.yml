@@ -20,10 +20,30 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install PyYAML==6.0.1  # Ensure PyYAML is installed
 
       - name: Run tests
         run: |
           python -m pytest tests/unit/ -v
+
+      - name: Validate Swagger generation
+        run: |
+          # Create minimal .env.local for Swagger generation
+          echo "FLASK_HOST=0.0.0.0" > .env.local
+          echo "FLASK_PORT=5000" >> .env.local
+          echo "FLASK_DEBUG=False" >> .env.local
+          echo "WEATHERBIT_API_KEY=placeholder" >> .env.local
+          echo "DB_HOST=localhost" >> .env.local
+          echo "DB_PORT=5432" >> .env.local
+          echo "DB_NAME=thunder_buddy" >> .env.local
+          echo "DB_USERNAME=postgres" >> .env.local
+          echo "DB_PASSWORD=placeholder" >> .env.local
+
+          # Run swagger generation to validate it works
+          make swagger
+
+          # Verify swagger.yaml was created
+          test -f static/swagger.yaml || (echo "Swagger generation failed" && exit 1)
 
   build:
     needs: test

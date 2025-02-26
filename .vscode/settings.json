@@ -1,21 +1,19 @@
 {
-    "python.analysis.extraPaths": [
-        "./venv/lib/python3.*/site-packages",
-        "./venv/lib64/python3.*/site-packages"
-    ],
-    "python.defaultInterpreterPath": "./venv/bin/python",
-    "python.linting.enabled": true,
-    "python.linting.flake8Enabled": true,
-    "python.linting.pylintEnabled": true,
-    "python.formatting.provider": "black",
+  "python.analysis.extraPaths": ["./venv/lib/python3.*/site-packages", "./venv/lib64/python3.*/site-packages"],
+  "python.defaultInterpreterPath": "./venv/bin/python",
+  "python.linting.enabled": true,
+  "python.linting.flake8Enabled": true,
+  "python.linting.pylintEnabled": true,
+  "python.formatting.provider": "black",
+  "editor.formatOnSave": true,
+  "python.linting.mypyEnabled": true,
+  "python.linting.lintOnSave": true,
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
     "editor.formatOnSave": true,
-    "python.linting.mypyEnabled": true,
-    "python.linting.lintOnSave": true,
-    "[python]": {
-        "editor.defaultFormatter": "ms-python.black-formatter",
-        "editor.formatOnSave": true,
-        "editor.codeActionsOnSave": {
-            "source.organizeImports": "explicit"
-        }
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
     }
-} 
+  },
+  "makefile.configureOnOpen": false
+}

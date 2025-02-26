@@ -1,5 +1,5 @@
 -- Create the application user with limited privileges
-CREATE USER thunderbuddy WITH PASSWORD '${DB_PASSWORD}';
+CREATE USER thunderbuddy WITH PASSWORD 'localdev';
 
 -- Create the database owned by thunderbuddy
 CREATE DATABASE thunderbuddy OWNER thunderbuddy;
