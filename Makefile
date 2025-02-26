@@ -1,4 +1,4 @@
-.PHONY: help test test-unit test-integration lint coverage clean install dev-env yamlint yamlint-fix swagger
+.PHONY: help test test-unit test-integration lint coverage clean install dev-env yamlint yamlint-fix swagger setup
 
 # Default target when just running 'make'
 help:
@@ -11,6 +11,7 @@ help:
 	@echo "  make coverage         - Run tests with coverage report"
 	@echo "  make clean            - Remove Python file artifacts"
 	@echo "  make dev-env          - Set up development environment"
+	@echo "  make setup            - Run the setup.py script to configure the development environment"
 	@echo "  make yamlint          - Run YAML linting"
 	@echo "  make yamlint-fix      - Auto-fix YAML formatting issues"
 	@echo "  make swagger          - Generate Swagger/OpenAPI specification"
@@ -21,7 +22,17 @@ install:
 
 # Run all tests
 test:
-	python -m pytest -v
+	@echo "Checking if database is running..."
+	@if ! docker ps | grep -q thunder-buddy-db; then \
+		echo "Starting database container for integration tests..."; \
+		docker-compose up -d db; \
+		echo "Waiting for database to be ready..."; \
+		sleep 5; \
+	else \
+		echo "Database container is already running."; \
+	fi
+	@echo "Running tests with DATABASE_URL set for integration tests..."
+	DATABASE_URL="postgresql://thunderbuddy:localdev@localhost:5432/thunderbuddy" python -m pytest -v
 
 # Run unit tests only
 test-unit:
@@ -29,12 +40,22 @@ test-unit:
 
 # Run integration tests only
 test-integration:
-	python -m pytest tests/integration/ -v -m integration
+	@echo "Checking if database is running..."
+	@if ! docker ps | grep -q thunder-buddy-db; then \
+		echo "Starting database container for integration tests..."; \
+		docker-compose up -d db; \
+		echo "Waiting for database to be ready..."; \
+		sleep 5; \
+	else \
+		echo "Database container is already running."; \
+	fi
+	@echo "Running integration tests with DATABASE_URL set..."
+	DATABASE_URL="postgresql://thunderbuddy:localdev@localhost:5432/thunderbuddy" python -m pytest tests/integration/ -v -m integration
 
 # Run linting
 lint:
-	flake8 . --max-line-length=88 --extend-ignore=E203,W503 --exclude=venv*,.venv,env,.env,.git,__pycache__,*.pyc,*.egg-info,build,dist --ignore=F401
-	pylint --ignore=venv,env,.venv,.env,build,dist --disable=W0611,C0301 **/*.py
+	flake8 .
+	pylint --ignore=venv,env,.venv,.env,build,dist --rcfile=.pylintrc **/*.py
 
 # Auto-fix linting issues where possible
 lint-fix:
@@ -60,6 +81,10 @@ clean:
 dev-env:
 	python -m venv venv
 	. venv/bin/activate && pip install -r requirements.txt
+
+# Run the setup.py script to configure the development environment
+setup:
+	python setup.py
 
 # Run YAML linting
 yamlint:
@@ -87,4 +112,14 @@ swagger:
 	else \
 		echo "Warning: .env.local not found, using default .env"; \
 	fi
-	. venv/bin/activate && python scripts/generate_swagger.py
+	@# Check if we're in a virtual environment already (CI environments often are)
+	@if [ -n "$$VIRTUAL_ENV" ]; then \
+		echo "Using active virtual environment"; \
+		python scripts/generate_swagger.py; \
+	elif [ -f venv/bin/activate ]; then \
+		echo "Activating local virtual environment"; \
+		. venv/bin/activate && python scripts/generate_swagger.py; \
+	else \
+		echo "No virtual environment found, running directly"; \
+		python scripts/generate_swagger.py; \
+	fi

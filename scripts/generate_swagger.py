@@ -12,15 +12,8 @@ from typing import Any, Dict
 root_dir = os.path.dirname(os.path.dirname(__file__))
 sys.path.append(str(root_dir))
 
-try:
-    import yaml
-except ImportError:
-    print("Error: PyYAML not installed. Installing now...")
-    os.system("pip install PyYAML==6.0.1")
-    import yaml
-
-from dotenv import load_dotenv
-from flask import Flask, request
+from dotenv import load_dotenv  # noqa: E402
+from flask import Flask, request  # noqa: E402
 
 # Load environment variables from .env.local if it exists
 env_path = os.path.join(root_dir, ".env.local")
@@ -29,8 +22,15 @@ if os.path.exists(env_path):
 else:
     load_dotenv()  # fallback to .env
 
+try:
+    import yaml  # noqa: E402
+except ImportError:
+    print("Error: PyYAML not installed. Installing now...")
+    os.system("pip install PyYAML==6.0.1")
+    import yaml  # noqa: E402
+
 # Import app after environment is loaded
-from main import app
+from main import app  # noqa: E402
 
 
 def analyze_route_params(func) -> list:
@@ -60,7 +60,7 @@ def analyze_route_params(func) -> list:
                         "description": f"Parameter {param_name}",
                     }
                 )
-            except Exception as e:
+            except Exception:  # Remove unused 'e' variable
                 print(f"Warning: Failed to parse parameter from line: {line}")
 
     return params

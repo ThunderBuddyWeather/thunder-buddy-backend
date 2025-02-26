@@ -1,0 +1,35 @@
+[MASTER]
+ignore=CVS,venv,.venv,env,build,dist,*.egg,*.egg-info,__pycache__,.pytest_cache,.git,logs,htmlcov
+ignore-patterns=.+\.pyc$
+
+[FORMAT]
+max-line-length=88
+
+[MESSAGES CONTROL]
+disable=C0303,  # trailing-whitespace (handled by formatter)
+        C0413,  # wrong-import-position (sometimes necessary)
+        R0903,  # too-few-public-methods (valid for data classes)
+        W0703,  # broad-except (acceptable in top-level error handling)
+        W0702,  # bare-except (acceptable in top-level error handling)
+        W0603,  # global-statement
+        C0412,  # ungrouped-imports (handled by isort)
+        C0207,  # use-maxsplit-arg (style preference)
+        W1514,  # unspecified-encoding (Python 3 handles UTF-8 well)
+        R0801,  # duplicate-code (can be too strict)
+        W0718,  # broad-exception-caught (acceptable in error handling)
+        W0621,  # redefined-outer-name (acceptable in test fixtures)
+        W0613,  # unused-argument (needed for hooks and callbacks)
+        E0401   # import-error (for dependencies)
+
+[BASIC]
+good-names=i,j,k,ex,Run,_,_engine
+variable-naming-style=snake_case
+const-naming-style=UPPER_CASE
+function-naming-style=snake_case
+method-naming-style=snake_case
+class-naming-style=PascalCase
+
+[REPORTS]
+output-format=colorized
+reports=no
+score=no 

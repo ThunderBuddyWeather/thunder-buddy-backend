@@ -27,7 +27,7 @@ services:
     env_file:
       - ${ENV_FILE:-.env.local}
     ports:
-      - "5000:5000"
+      - "${HOST_PORT:-5000}:5000"
     environment:
       - DATABASE_URL=postgresql://thunderbuddy:${DB_PASSWORD}@db:5432/thunderbuddy
       - DB_PASSWORD=${DB_PASSWORD}
