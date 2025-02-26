@@ -81,6 +81,7 @@ runs:
         # Replace placeholders with actual inputs
         sed -i "s/\${DB_PASSWORD}/${{ inputs.db_password }}/g" .env.local
         sed -i "s/\${WEATHERBIT_API_KEY}/${{ inputs.weatherbit_api_key }}/g" .env.local
+        cat .env.local
 
     - name: Copy files to EC2
       shell: bash
