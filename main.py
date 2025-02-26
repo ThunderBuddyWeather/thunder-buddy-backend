@@ -102,27 +102,49 @@ def get_local_weather():
 @app.route("/health", methods=["GET"])
 def health_check() -> Tuple[Dict, int]:
     """Check the health of the application by verifying database connectivity."""
-    db_health: Dict[str, str] = check_db_health()
+    app.logger.info("Health check requested")
+    
+    try:
+        db_health: Dict[str, str] = check_db_health()
+        app.logger.info(f"Database health check result: {db_health}")
 
-    # Determine overall health status based on database connection and query status
-    is_healthy = (
-        db_health["connection"] == "healthy"
-        and db_health["query"] == "healthy"
-    )
+        # Determine overall health status based on database connection and query status
+        is_healthy = (
+            db_health["connection"] == "healthy"
+            and db_health["query"] == "healthy"
+        )
 
-    health_status = {
-        "status": "healthy" if is_healthy else "unhealthy",
-        "components": {
-            "api": {
-                "status": "healthy",
-                "message": "API service is running"
+        health_status = {
+            "status": "healthy" if is_healthy else "unhealthy",
+            "components": {
+                "api": {
+                    "status": "healthy",
+                    "message": "API service is running"
+                },
+                "database": db_health,
             },
-            "database": db_health,
-        },
-    }
+        }
 
-    http_status = 200 if health_status["status"] == "healthy" else 503
-    return jsonify(health_status), http_status
+        http_status = 200 if health_status["status"] == "healthy" else 503
+        app.logger.info(f"Health check response: status={http_status}, body={health_status}")
+        return jsonify(health_status), http_status
+    except Exception as e:
+        app.logger.error(f"Health check error: {str(e)}")
+        error_status = {
+            "status": "unhealthy",
+            "components": {
+                "api": {
+                    "status": "unhealthy",
+                    "message": f"Error during health check: {str(e)}"
+                },
+                "database": {
+                    "connection": "unhealthy",
+                    "query": "unhealthy",
+                    "message": f"Exception during health check: {str(e)}"
+                }
+            }
+        }
+        return jsonify(error_status), 503
 
 
 if __name__ == "__main__":

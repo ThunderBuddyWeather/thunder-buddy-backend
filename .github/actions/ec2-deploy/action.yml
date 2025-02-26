@@ -136,8 +136,9 @@ runs:
           docker compose up -d
 
           echo "Waiting for services to be healthy..."
-          # Wait for DB to be ready (max 30 seconds)
-          timeout 30 bash -c 'until docker exec thunder-buddy-db pg_isready -U thunderbuddy -d thunderbuddy; do sleep 2; done'
+          # Wait for DB to be ready (max 60 seconds instead of 30)
+          echo "Waiting for database to be ready..."
+          timeout 60 bash -c 'until docker exec thunder-buddy-db pg_isready -U thunderbuddy -d thunderbuddy; do sleep 2; echo "Waiting for database..."; done'
           if [ $? -ne 0 ]; then
             echo "Error: Database failed to become ready"
             docker compose logs db
@@ -147,13 +148,34 @@ runs:
 
           # Check if app container is running and can connect to DB
           echo "Waiting for application to become healthy..."
-          for i in {1..30}; do
-            if curl -s http://localhost:5000/health > /dev/null; then
+
+          # Get the actual host port that's mapped to container port 5000
+          APP_PORT=$(docker inspect --format='{{(index (index .NetworkSettings.Ports "5000/tcp") 0).HostPort}}' thunder-buddy)
+          echo "Application is mapped to host port: $APP_PORT"
+
+          # Check if container is running
+          echo "Container status:"
+          docker ps | grep thunder-buddy
+
+          # Check container logs
+          echo "Container logs:"
+          docker logs thunder-buddy --tail 50
+
+          # Increase timeout for health check (from 30 to 60 iterations)
+          for i in {1..60}; do
+            echo "Health check attempt $i/60..."
+            HEALTH_RESPONSE=$(curl -s http://localhost:$APP_PORT/health)
+            echo "Health response: $HEALTH_RESPONSE"
+            
+            if echo "$HEALTH_RESPONSE" | grep -q "healthy"; then
               echo "Application is healthy"
               break
             fi
-            if [ $i -eq 30 ]; then
-              echo "Error: Application failed to become healthy"
+            
+            if [ $i -eq 60 ]; then
+              echo "Error: Application failed to become healthy after 60 attempts"
+              echo "Checking database connection from inside container..."
+              docker exec thunder-buddy python -c "from scripts.db import test_connection; print(test_connection())"
               docker compose logs
               exit 1
             fi
@@ -162,7 +184,10 @@ runs:
 
           # Final connectivity test
           echo "Testing service connectivity..."
-          if ! curl -s http://localhost:5000/health > /dev/null; then
+          FINAL_HEALTH=$(curl -v http://localhost:$APP_PORT/health)
+          echo "Final health check response: $FINAL_HEALTH"
+
+          if ! echo "$FINAL_HEALTH" | grep -q "healthy"; then
             echo "Error: Application health check failed"
             docker compose logs
             exit 1
