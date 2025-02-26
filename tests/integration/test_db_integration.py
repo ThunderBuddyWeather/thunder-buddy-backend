@@ -10,7 +10,7 @@ import pytest
 def database_url():
     """Fixture to provide database URL for integration tests"""
     # Get the URL from environment and replace 'db' host with 'localhost'
-    url = os.environ.get("DATABASE_URL", "").replace("@db:", "@localhost:")
+    url = "postgresql://thunderbuddy:localdev@localhost:5432/thunderbuddy"
     if not url:
         pytest.skip("DATABASE_URL not set")
     return url
