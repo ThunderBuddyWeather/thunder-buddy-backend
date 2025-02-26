@@ -30,21 +30,34 @@ COPY .env.ci .env.ci
 # which helps reduce the final image size.
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Create scripts directory
+RUN mkdir -p scripts
+
 # Copy application files
 COPY main.py .
 COPY scripts/ scripts/
+
+# Create static directory if it doesn't exist
+RUN mkdir -p static
 
 # Copy the static directory
 COPY static/ static/
 
 # Copy the startup script into the container
-COPY scripts/startup.sh .
+COPY scripts/startup.sh scripts/startup.sh
 
 # Copy the init_db_user script into the container
-COPY scripts/init_db_user.py .
+COPY scripts/init_db_user.py scripts/init_db_user.py
 
 # Make the startup script executable
 RUN chmod +x scripts/startup.sh
+
+# Ensure all scripts are executable
+RUN find scripts -type f -name "*.py" -exec chmod +x {} \;
+RUN find scripts -type f -name "*.sh" -exec chmod +x {} \;
+
+# List all files to verify they were copied correctly
+RUN ls -la && ls -la scripts/
 
 # Expose port 5000 so that the container listens on this port at runtime.
 EXPOSE 5000
@@ -57,7 +70,8 @@ ENV DB_HOST=db \
   DB_PASSWORD=localdev \
   DB_ADMIN_USER=postgres \
   DB_ADMIN_PASSWORD=postgres \
-  DATABASE_URL=postgresql://thunderbuddy:localdev@db:5432/thunderbuddy
+  DATABASE_URL=postgresql://thunderbuddy:localdev@db:5432/thunderbuddy \
+  PYTHONUNBUFFERED=1
 
 # Set the container's entrypoint to run our startup script.
 ENTRYPOINT ["scripts/startup.sh"]

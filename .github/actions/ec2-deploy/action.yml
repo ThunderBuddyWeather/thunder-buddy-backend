@@ -157,21 +157,26 @@ runs:
           echo "Container status:"
           docker ps | grep thunder-buddy
 
-          # Check container logs
-          echo "Container logs:"
-          docker logs thunder-buddy --tail 50
+          # Check container logs with more detail
+          echo "Container logs (last 100 lines):"
+          docker logs thunder-buddy --tail 100
 
-          # Check container network settings
-          echo "Container network settings:"
-          docker inspect thunder-buddy --format='{{json .NetworkSettings.Networks}}' | jq
+          # Check if the container is restarting and why
+          echo "Container inspection (restart count and last state):"
+          docker inspect thunder-buddy --format='{{.RestartCount}} restarts. Last error: {{.State.Error}}'
 
-          # Check if the container is listening on port 5000
-          echo "Checking if container is listening on port 5000:"
-          docker exec thunder-buddy netstat -tulpn | grep 5000 || echo "netstat not found, trying ss" && docker exec thunder-buddy ss -tulpn | grep 5000 || echo "Port 5000 not found in listening ports"
+          # Check if the database container is healthy
+          echo "Database container status:"
+          docker inspect thunder-buddy-db --format='{{.State.Health.Status}}'
 
-          # Try to access the health endpoint from inside the container
-          echo "Trying to access health endpoint from inside the container:"
-          docker exec thunder-buddy curl -v http://0.0.0.0:5000/health || echo "curl failed inside container"
+          # Check database logs
+          echo "Database container logs:"
+          docker logs thunder-buddy-db --tail 20
+
+          # Try to run the application manually to see any errors
+          echo "Trying to run the application manually:"
+          docker exec -it thunder-buddy-db pg_isready -h db -U thunderbuddy -d thunderbuddy || echo "Database not ready"
+          docker exec thunder-buddy python -c "import sys; print(sys.path)" || echo "Failed to print Python path"
 
           # Check if the application started properly
           echo "Checking if Flask application started:"

@@ -5,7 +5,8 @@ services:
     ports:
       - "5000:5000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       - DB_HOST=db
       - DB_PORT=5432
@@ -16,13 +17,16 @@ services:
       - DB_ADMIN_PASSWORD=postgres
       - DATABASE_URL=postgresql://thunderbuddy:${DB_PASSWORD:-localdev}@db:5432/thunderbuddy
       - WEATHERBIT_API_KEY=${WEATHERBIT_API_KEY}
+      - PYTHONUNBUFFERED=1
     healthcheck:
       test: ["CMD", "curl", "-f", "http://0.0.0.0:5000/health"]
       interval: 10s
       timeout: 5s
       retries: 3
-      start_period: 10s
+      start_period: 30s
     restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
 
   db:
     image: postgres:15-alpine
@@ -45,3 +49,4 @@ services:
 
 volumes:
   postgres_data:
+  logs:
