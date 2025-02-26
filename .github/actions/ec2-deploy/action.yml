@@ -95,7 +95,7 @@ runs:
         ls -lart ~/deploy-temp/
 
         # Copy all files to EC2
-        scp -i ~/.ssh/ec2_key -r ~/deploy-temp/* ${{ inputs.username }}@${{ inputs.host }}:~/thunder-buddy/
+        scp -i ~/.ssh/ec2_key -r ~/deploy-temp/* ~/deploy-temp/.[!.]* ${{ inputs.username }}@${{ inputs.host }}:~/thunder-buddy/
         echo "All deployment files copied to EC2"
 
     - name: Deploy to EC2
