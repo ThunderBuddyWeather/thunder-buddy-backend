@@ -1,35 +1,165 @@
 [MASTER]
-ignore=CVS,venv,.venv,env,build,dist,*.egg,*.egg-info,__pycache__,.pytest_cache,.git,logs,htmlcov
-ignore-patterns=.+\.pyc$
+# Files or directories to be skipped. They should be base names, not paths
+ignore=
+    CVS,
+    .git,
+    .gitignore,
+    .env,
+    .venv,
+    venv,
+    env,
+    build,
+    dist,
+    __pycache__,
+    *.pyc,
+    *.pyo,
+    *.pyd,
+    *.so,
+    *.dll,
+    *.dylib,
+    .tox,
+    .coverage,
+    .coverage.*,
+    .pytest_cache,
+    .mypy_cache,
+    htmlcov,
+    site-packages,
+    lib/python*,
+    **/site-packages/**,
+    **/lib/python*/**,
+    **/venv/**,
+    **/.venv/**,
+    **/env/**
+
+# Files or directories matching the regex patterns are skipped
+ignore-patterns=
+    .+/venv/.+,
+    .+/\.venv/.+,
+    .+/env/.+,
+    .+/\.env/.+,
+    .+/site-packages/.+,
+    .+/lib/python[0-9.]+/.+,
+    .*/\..+,
+    .*\.pyc$,
+    .*\.pyo$,
+    .*\.pyd$,
+    .*\.so$,
+    .*\.dll$,
+    .*\.dylib$,
+    .*\.egg-info$,
+    .*\.egg$
+
+# Add Python module names here where you want to disable all warnings
+ignored-modules=numpy,torch,tensorflow,cv2
+
+# Files to load plugins from
+load-plugins=
+
+# Use multiple processes to speed up Pylint (use "0" for auto)
+jobs=0
 
 [FORMAT]
+# Maximum number of characters on a single line (match black)
 max-line-length=88
 
+# Maximum number of lines in a module
+max-module-lines=2000
+
+# String used as indentation unit (2 spaces, 4 spaces, or tab)
+indent-string='    '
+
 [MESSAGES CONTROL]
+# Disable specific warnings
 disable=C0303,  # trailing-whitespace (handled by formatter)
+        C0304,  # missing-final-newline (handled by formatter)
+        C0411,  # wrong-import-order (handled by isort)
+        C0412,  # ungrouped-imports (handled by isort)
         C0413,  # wrong-import-position (sometimes necessary)
+        C0414,  # useless-import-alias (can be useful for clarity)
+        W0611,  # unused-import (handled by autoflake/IDE)
+        W0511,  # fixme (TODO/FIXME comments are useful)
         R0903,  # too-few-public-methods (valid for data classes)
         W0703,  # broad-except (acceptable in top-level error handling)
         W0702,  # bare-except (acceptable in top-level error handling)
-        W0603,  # global-statement
-        C0412,  # ungrouped-imports (handled by isort)
+        W0603,  # global-statement (sometimes necessary)
         C0207,  # use-maxsplit-arg (style preference)
         W1514,  # unspecified-encoding (Python 3 handles UTF-8 well)
         R0801,  # duplicate-code (can be too strict)
         W0718,  # broad-exception-caught (acceptable in error handling)
         W0621,  # redefined-outer-name (acceptable in test fixtures)
         W0613,  # unused-argument (needed for hooks and callbacks)
-        E0401   # import-error (for dependencies)
+        E0401,  # import-error (for dependencies)
+        R0913,  # too-many-arguments (can be valid)
+        R0914   # too-many-locals (can be valid in complex functions)
 
 [BASIC]
-good-names=i,j,k,ex,Run,_,_engine
+# Regular expressions for various naming styles
+good-names=i,j,k,ex,Run,_,id,fp,db,up,ip
 variable-naming-style=snake_case
 const-naming-style=UPPER_CASE
 function-naming-style=snake_case
 method-naming-style=snake_case
 class-naming-style=PascalCase
+module-naming-style=snake_case
+
+# Regular expression for function names that should be ignored
+no-docstring-rgx=^_|test_.*
+
+[DESIGN]
+# Maximum number of arguments for functions
+max-args=10
+
+# Maximum number of locals for functions
+max-locals=20
+
+# Maximum number of return statements
+max-returns=10
+
+# Maximum number of branches
+max-branches=20
+
+# Maximum number of statements
+max-statements=100
+
+# Maximum number of parents
+max-parents=10
+
+# Maximum number of attributes
+max-attributes=15
+
+# Minimum number of public methods
+min-public-methods=0
 
 [REPORTS]
+# Set the output format (text, parseable, colorized, html)
 output-format=colorized
+
+# Include a brief explanation of each error
+msg-template={path}:{line}: [{msg_id}({symbol}), {obj}] {msg}
+
+# Disable the reports section
 reports=no
-score=no 
+
+# Disable the final score
+score=no
+
+[SIMILARITIES]
+# Minimum lines number of a similarity
+min-similarity-lines=8
+
+# Ignore imports when computing similarities
+ignore-imports=yes
+
+# Ignore docstrings when computing similarities
+ignore-docstrings=yes
+
+[TYPECHECK]
+# List of module names for which member attributes should not be checked
+ignored-modules=numpy,torch,tensorflow,cv2
+
+# List of classes names for which member attributes should not be checked
+ignored-classes=SQLObject,SQLAlchemy,scoped_session
+
+[MISCELLANEOUS]
+# List of note tags to take into consideration
+notes=FIXME,XXX,TODO,HACK 

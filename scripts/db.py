@@ -40,7 +40,10 @@ def test_connection(database_url=None) -> Dict[str, str]:
         try:
             conn_url = database_url or os.environ["DATABASE_URL"]
         except KeyError:
-            db_status["message"] = "Database configuration error: DATABASE_URL environment variable is not set"
+            db_status["message"] = (
+                "Database configuration error: "
+                "DATABASE_URL environment variable is not set"
+            )
             return db_status
 
         # Test query execution using SQLAlchemy
@@ -48,7 +51,7 @@ def test_connection(database_url=None) -> Dict[str, str]:
             engine = get_engine(conn_url)
             # If we got an engine successfully, mark connection as healthy
             db_status["connection"] = "healthy"
-            
+
             with engine.connect() as connection:
                 result = connection.execute(text("SELECT 1")).scalar()
                 if result == 1:
