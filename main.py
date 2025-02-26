@@ -95,6 +95,7 @@ def get_local_weather():
     except requests.exceptions.RequestException:
         return jsonify({"error": "API request failed"}), 500
 
+
 @app.route("/test", methods=["GET"])
 def test():
     """Test endpoint that returns a message with timestamp"""
@@ -103,6 +104,7 @@ def test():
         "timestamp": datetime.now().isoformat(),
         "auto_reload": "this is a test endpoint. change me to see auto-reload in action"
     }), 200
+
 
 @app.route("/health", methods=["GET"])
 def health_check() -> Tuple[Dict, int]:
