@@ -30,8 +30,8 @@ services:
     ports:
       - "${HOST_PORT:-5001}:5000"
     environment:
-      - DATABASE_URL=postgresql://thunderbuddy:${DB_PASSWORD:-localdev}@db:5432/thunderbuddy
-      - DB_PASSWORD=${DB_PASSWORD:-localdev}
+      - DATABASE_URL=postgresql://thunderbuddy:localdev@db:5432/thunderbuddy
+      - DB_PASSWORD=localdev
     depends_on:
       db:
         condition: service_healthy

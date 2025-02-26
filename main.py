@@ -6,6 +6,8 @@ Provides current weather data through REST endpoints
 import logging
 import os
 from typing import Dict, Tuple
+import psycopg2
+
 
 import requests  # noqa: E402
 from dotenv import load_dotenv
@@ -60,7 +62,7 @@ def hello_world():
 @app.route("/weather", methods=["GET"])
 def get_local_weather():
     """Return current weather data for a given ZIP code and country"""
-    zip_code = request.args.get("zip", "30152")  # Default to 30152
+    zip_code = request.args.get("zip", "18656")  # Default to 30152
     country = request.args.get("country", "US")  # Default to US
 
     if not zip_code:
@@ -93,6 +95,10 @@ def get_local_weather():
         return jsonify({"error": "Request timed out"}), 500
     except requests.exceptions.RequestException:
         return jsonify({"error": "API request failed"}), 500
+
+@app.route("/test", methods=["GET"])
+def test():
+    return jsonify({"message": "this works"}), 200
 
 
 @app.route("/health", methods=["GET"])
