@@ -5,6 +5,7 @@ Provides current weather data through REST endpoints
 
 import logging
 import os
+from datetime import datetime
 from typing import Dict, Tuple
 
 import requests  # noqa: E402
@@ -94,6 +95,14 @@ def get_local_weather():
     except requests.exceptions.RequestException:
         return jsonify({"error": "API request failed"}), 500
 
+@app.route("/test", methods=["GET"])
+def test():
+    """Test endpoint that returns a message with timestamp"""
+    return jsonify({
+        "message": "this works",
+        "timestamp": datetime.now().isoformat(),
+        "auto_reload": "this is a test endpoint. change me to see auto-reload in action"
+    }), 200
 
 @app.route("/health", methods=["GET"])
 def health_check() -> Tuple[Dict, int]:
@@ -124,4 +133,9 @@ def health_check() -> Tuple[Dict, int]:
 if __name__ == "__main__":
     # Always use port 5000 inside the container
     # for consistency with EXPOSE and healthchecks
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(
+        host="0.0.0.0",
+        port=5000,
+        debug=True,  # Enables debug mode
+        use_reloader=True  # Enables auto-reload
+    )

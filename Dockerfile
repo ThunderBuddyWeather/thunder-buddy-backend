@@ -32,7 +32,11 @@ COPY static/ static/
 EXPOSE 5000
 
 # Environment variables
-ENV DB_HOST=db \
+ENV PYTHONDONTWRITEBYTECODE=1 \
+  PYTHONUNBUFFERED=1 \
+  FLASK_ENV=development \
+  FLASK_DEBUG=1 \
+  DB_HOST=db \
   DB_PORT=5432 \
   DB_NAME=thunderbuddy \
   DB_USERNAME=thunderbuddy \

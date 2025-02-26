@@ -35,6 +35,12 @@ Mobile application for tracking extreme weather events and notifying friends and
   - [Windows PowerShell Tips](#windows-powershell-tips)
   - [Windows Troubleshooting](#windows-troubleshooting)
   - [Using Windows Terminal (Recommended)](#using-windows-terminal-recommended)
+- [Development Workflow](#development-workflow)
+  - [Initial Setup](#initial-setup)
+  - [Making Changes](#making-changes)
+  - [Deployment](#deployment)
+  - [Common Issues and Solutions](#common-issues-and-solutions)
+  - [Best Practices](#best-practices)
 
 ## Thunder Buddy Backend
 
@@ -1167,3 +1173,111 @@ Windows Terminal provides a better experience for working with Docker and WSL:
          }
      ]
      ```
+
+## Development Workflow
+
+### Initial Setup
+1. Clone the repository
+2. Create a `.env.local` file from `.env.example`:
+   ```bash
+   cp .env.example .env.local
+   ```
+3. Set `DOCKER_USERNAME=local` in `.env.local` for local development
+
+### Making Changes
+1. Stop the running containers:
+   ```bash
+   ./stop.sh
+   ```
+
+2. Make your code changes (e.g., adding new endpoints, modifying existing ones)
+
+3. Stage your changes:
+   ```bash
+   # This is IMPORTANT - Docker build uses git to determine which files to include
+   git add .
+   ```
+
+4. Rebuild and start the application:
+   ```bash
+   # Option 1: Using start.sh (recommended)
+   ./start.sh  # This will automatically rebuild and start the containers
+
+   # Option 2: Manual steps
+   docker compose build --no-cache  # Force rebuild without cache
+   docker compose up -d            # Start containers in detached mode
+   ```
+
+5. Test your changes:
+   ```bash
+   # Check container status
+   docker ps
+
+   # View logs
+   docker logs thunder-buddy -f
+
+   # Test endpoints
+   curl http://localhost:5001/your-endpoint
+   ```
+
+6. If changes don't appear:
+   - Ensure your changes are staged with git:
+     ```bash
+     git add .
+     ```
+   - Ensure the containers are using the latest code:
+     ```bash
+     ./stop.sh
+     docker compose build --no-cache
+     ./start.sh
+     ```
+   - Check logs for errors:
+     ```bash
+     docker logs thunder-buddy
+     ```
+
+### Deployment
+When ready to deploy:
+1. Change `DOCKER_USERNAME` back to your Docker Hub username in `.env.local`
+2. Build and push the image:
+   ```bash
+   docker compose build
+   docker push ${DOCKER_USERNAME}/thunder-buddy:latest
+   ```
+
+### Common Issues and Solutions
+1. **404 Not Found**: Your changes might not be in the container
+   - Solution: Rebuild without cache using `docker compose build --no-cache`
+
+2. **Port Already in Use**: The application can't bind to port 5000
+   - Solution: The start script will automatically use port 5001
+
+3. **Database Connection Issues**: Can't connect to the database
+   - Solution: Check if the database container is healthy using `docker ps`
+   - Verify database credentials in `.env.local`
+
+### Best Practices
+1. Always use `./stop.sh` and `./start.sh` scripts for consistency
+2. Set `DOCKER_USERNAME=local` during development
+3. Use `--no-cache` when rebuilding if changes aren't appearing
+4. Monitor logs with `docker logs thunder-buddy -f`
+5. Test endpoints using curl or the Swagger UI at `/apidocs`
+
+### Important Notes
+
+1. **Docker Build Context and Git**
+   - Docker build uses git to determine which files to include in the build
+   - Only files that are tracked by git (staged or committed) will be included
+   - Always stage your changes with `git add .` before rebuilding
+   - This is a security feature to prevent including unwanted files
+
+2. **Port Usage**
+   - The application tries to use port 5000 by default
+   - If port 5000 is in use, it automatically switches to port 5001
+   - The port can be configured in `.env.local` using `HOST_PORT`
+
+3. **Environment Variables**
+   - Development settings should be in `.env.local`
+   - Never commit sensitive information to `.env` files
+   - Use `DOCKER_USERNAME=local` during development
+   - Change `DOCKER_USERNAME` to your Docker Hub username for deployment

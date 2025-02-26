@@ -99,6 +99,18 @@ paths:
                 properties:
                   error:
                     type: string
+  /test:
+    get:
+      summary: Test
+      description: Test
+      parameters: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
   /health:
     get:
       summary: Health Check
