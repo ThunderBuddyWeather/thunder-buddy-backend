@@ -19,7 +19,7 @@ services:
       - WEATHERBIT_API_KEY=${WEATHERBIT_API_KEY}
       - PYTHONUNBUFFERED=1
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://0.0.0.0:5000/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
       interval: 10s
       timeout: 5s
       retries: 3

@@ -14,6 +14,9 @@ RUN apt-get update && apt-get install -y \
   jq \
   && rm -rf /var/lib/apt/lists/*
 
+# Verify curl is installed and available
+RUN which curl && curl --version
+
 # Set the working directory inside the container.
 # All subsequent commands run within this directory.
 WORKDIR /app

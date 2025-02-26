@@ -149,6 +149,8 @@ def health_check():
             }
             health_status["status"] = "degraded"
     
+    # Always return 200 OK for health checks, even if database is degraded
+    # This ensures the container is marked as healthy
     return jsonify(health_status), 200
 
 
