@@ -10,7 +10,7 @@ from typing import Dict, Tuple
 
 import requests  # noqa: E402
 from dotenv import load_dotenv
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 
 # Import our database module
 from scripts.db import init_db
@@ -36,6 +36,12 @@ app = Flask(__name__)
 # Register Swagger UI blueprint if available
 if get_swaggerui_blueprint:
     app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
+
+# Add a route to serve swagger.yaml with the correct MIME type
+@app.route('/static/swagger.yaml')
+def serve_swagger():
+    """Serve the swagger.yaml file with the correct MIME type"""
+    return send_from_directory('static', 'swagger.yaml', mimetype='application/yaml')
 
 load_dotenv()
 
