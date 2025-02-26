@@ -25,6 +25,11 @@ else:
     print("Loading environment from default .env")
     load_dotenv()  # fallback to .env
 
+# Set dummy DATABASE_URL for Swagger generation if not set
+if not os.environ.get("DATABASE_URL"):
+    print("Setting dummy DATABASE_URL for Swagger generation")
+    os.environ["DATABASE_URL"] = "postgresql://dummy:dummy@localhost:5432/dummy"
+
 try:
     import yaml  # noqa: E402
 except ImportError:

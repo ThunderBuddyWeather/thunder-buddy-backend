@@ -60,6 +60,11 @@ SessionFactory = scoped_session(sessionmaker())
 
 def init_db() -> None:
     """Initialize database connection"""
+    # Skip actual initialization during Swagger generation
+    if os.environ.get("DATABASE_URL", "").startswith("postgresql://dummy:"):
+        logger.info("Skipping database initialization during Swagger generation")
+        return
+
     engine = get_engine()
     SessionFactory.configure(bind=engine)
     logger.info("Database session factory configured")
