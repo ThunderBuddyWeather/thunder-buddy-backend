@@ -22,8 +22,9 @@ def pytest_configure(config):
     This function is called before tests are collected.
     It sets up environment variables for testing.
     """
-    # Set test database URL
-    os.environ['DATABASE_URL'] = 'postgresql://test:test@localhost:5432/test_db'
+    # Set test database URL to match the one used in Makefile
+    if 'DATABASE_URL' not in os.environ:
+        os.environ['DATABASE_URL'] = 'postgresql://thunderbuddy:localdev@localhost:5432/thunderbuddy'
 
     # Ensure we have a test API key
     if 'WEATHERBIT_API_KEY' not in os.environ:

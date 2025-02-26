@@ -32,11 +32,11 @@ test:
 		echo "Database container is already running."; \
 	fi
 	@echo "Running tests with DATABASE_URL set for integration tests..."
-	DATABASE_URL="postgresql://thunderbuddy:localdev@localhost:5432/thunderbuddy" python -m pytest -v
+	PYTHONPATH=. DATABASE_URL="postgresql://thunderbuddy:localdev@localhost:5432/thunderbuddy" python -m pytest -v
 
 # Run unit tests only
 test-unit:
-	python -m pytest tests/unit/ -v -m "not integration"
+	PYTHONPATH=. python -m pytest tests/unit/ -v -m "not integration"
 
 # Run integration tests only
 test-integration:
@@ -50,7 +50,7 @@ test-integration:
 		echo "Database container is already running."; \
 	fi
 	@echo "Running integration tests with DATABASE_URL set..."
-	DATABASE_URL="postgresql://thunderbuddy:localdev@localhost:5432/thunderbuddy" python -m pytest tests/integration/ -v -m integration
+	PYTHONPATH=. DATABASE_URL="postgresql://thunderbuddy:localdev@localhost:5432/thunderbuddy" python -m pytest tests/integration/ -v -m integration
 
 # Run linting
 lint:

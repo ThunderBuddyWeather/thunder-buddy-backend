@@ -1,3 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "thunder-buddy"
+version = "0.1.0"
+authors = [
+    { name = "Thunder Buddy Team" },
+]
+description = "Thunder Buddy Backend"
+requires-python = ">=3.8"
+dependencies = [
+    "flask>=3.1.0",
+    "flask-swagger-ui>=4.11.1",
+    "psycopg2-binary>=2.9.9",
+    "python-dotenv>=1.0.1",
+    "requests>=2.32.3",
+    "sqlalchemy>=2.0.28",
+    "pyyaml>=6.0.1",
+]
+
+[tool.setuptools]
+packages = ["scripts"]
+
 [tool.black]
 line-length = 88
 include = '\.pyi?$'
