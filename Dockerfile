@@ -28,6 +28,14 @@ COPY scripts/ scripts/
 # Create static directory if it doesn't exist
 COPY static/ static/
 
+# Copy the startup script into the container
+COPY scripts/startup.sh .
+
+# Copy the init_db_user script into the container
+COPY scripts/init_db_user.py .
+
+COPY .env.ci .
+
 # Make the startup script executable
 RUN chmod +x scripts/startup.sh
 
