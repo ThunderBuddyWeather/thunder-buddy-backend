@@ -3,11 +3,13 @@
 import os
 from typing import Dict
 
+# pylint: disable=import-error
 from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 
 # Global engine instance
 _engine = None
+
 
 def get_engine() -> Engine:
     """
@@ -23,6 +25,7 @@ def get_engine() -> Engine:
         _engine = create_engine(database_url)
 
     return _engine
+
 
 def test_connection() -> Dict[str, str]:
     """
@@ -56,4 +59,4 @@ def test_connection() -> Dict[str, str]:
     except SQLAlchemyError as error:
         db_status["message"] = f"Database check failed: {str(error)}"
 
-    return db_status 
+    return db_status

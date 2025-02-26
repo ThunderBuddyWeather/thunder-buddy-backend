@@ -1,7 +1,6 @@
 """Integration tests for database functionality"""
 
-import os
-
+# pylint: disable=import-error
 import psycopg2
 import pytest
 

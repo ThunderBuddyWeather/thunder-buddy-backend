@@ -55,11 +55,13 @@ def test_connection(database_url=None) -> Dict[str, str]:
 
 
 if __name__ == "__main__":
-    result = test_connection()
+    health_check_result = test_connection()
     print("Database Health Check Results:")
-    print(f"Connection: {result['connection']}")
-    print(f"Query: {result['query']}")
-    print(f"Message: {result['message']}")
-    sys.exit(
-        0 if result["connection"] == "healthy" and result["query"] == "healthy" else 1
+    print(f"Connection: {health_check_result['connection']}")
+    print(f"Query: {health_check_result['query']}")
+    print(f"Message: {health_check_result['message']}")
+    IS_HEALTHY = (
+        health_check_result["connection"] == "healthy"
+        and health_check_result["query"] == "healthy"
     )
+    sys.exit(0 if IS_HEALTHY else 1)

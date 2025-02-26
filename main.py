@@ -17,45 +17,46 @@ from sqlalchemy import create_engine, text
 from scripts.test_db_connection import test_connection
 
 # Load environment variables from .env.local if it exists
-env_path = os.path.join(os.path.dirname(__file__), '.env.local')
+env_path = os.path.join(os.path.dirname(__file__), ".env.local")
 if os.path.exists(env_path):
     load_dotenv(env_path)
 else:
     load_dotenv()  # fallback to .env
 
-app = Flask(__name__, 
-           static_url_path='',
-           static_folder='static')
+app = Flask(__name__, static_url_path="", static_folder="static")
 
 # Configure Swagger UI
-SWAGGER_URL = '/apidocs/'
-API_URL = '/static/swagger.yaml'
+SWAGGER_URL = "/apidocs/"
+API_URL = "/static/swagger.yaml"
 
 swaggerui_blueprint = get_swaggerui_blueprint(
     base_url=SWAGGER_URL,
     api_url=API_URL,
     config={
-        'app_name': "Thunder Buddy API",
-        'validatorUrl': None,
-        'layout': "BaseLayout",
-        'deepLinking': True
-    }
+        "app_name": "Thunder Buddy API",
+        "validatorUrl": None,
+        "layout": "BaseLayout",
+        "deepLinking": True,
+    },
 )
 
 # Register blueprint with URL rule handling
 app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
 
+
 # Serve swagger spec
-@app.route('/static/swagger.yaml')
+@app.route("/static/swagger.yaml")
 def serve_swagger_spec():
     """Serve the Swagger specification file"""
-    return send_from_directory('static', 'swagger.yaml')
+    return send_from_directory("static", "swagger.yaml")
+
 
 # Add a redirect for the base /apidocs URL
-@app.route('/apidocs')
+@app.route("/apidocs")
 def swagger_ui():
     """Redirect to Swagger UI"""
-    return redirect('/apidocs/')
+    return redirect("/apidocs/")
+
 
 # fmt: off
 WEATHERBIT_API_KEY = os.getenv("WEATHERBIT_API_KEY",

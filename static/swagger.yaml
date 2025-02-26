@@ -43,6 +43,30 @@ paths:
             application/json:
               schema:
                 type: object
+  /static/swagger.yaml:
+    get:
+      summary: Serve Swagger Spec
+      description: Serve the Swagger specification file
+      parameters: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  /apidocs:
+    get:
+      summary: Swagger Ui
+      description: Redirect to Swagger UI
+      parameters: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
   /:
     get:
       summary: Hello World

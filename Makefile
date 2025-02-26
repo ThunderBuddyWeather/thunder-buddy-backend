@@ -55,7 +55,11 @@ test-integration:
 # Run linting
 lint:
 	flake8 .
-	pylint --ignore=venv,env,.venv,.env,build,dist --rcfile=.pylintrc **/*.py
+	pylint \
+		--ignore=venv,env,.venv,.env,build,dist,*.egg,*.egg-info,__pycache__,.pytest_cache,.git,logs,htmlcov \
+		--ignore-patterns='.+\.pyc$$' \
+		--rcfile=.pylintrc \
+		**/*.py
 
 # Auto-fix linting issues where possible
 lint-fix:
