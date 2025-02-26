@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # Check if .env file exists
 if [ ! -f .env.local ] && [ ! -f .env ]; then
@@ -38,4 +39,24 @@ fi
 # Export variables for docker compose
 export DOCKER_USERNAME DB_PASSWORD POSTGRES_PASSWORD
 
-docker compose --env-file .env.local up 
+# Check if port 5000 is available
+if nc -z localhost 5000 2>/dev/null; then
+  echo "Port 5000 is already in use. Using port 5001 instead."
+  export HOST_PORT=5001
+else
+  echo "Port 5000 is available. Using it."
+  export HOST_PORT=5000
+fi
+
+# Update .env.local with the selected port
+sed -i.bak "s/HOST_PORT=.*/HOST_PORT=$HOST_PORT/" .env.local
+rm -f .env.local.bak
+
+# Export all environment variables from .env.local
+export $(grep -v '^#' .env.local | xargs)
+
+# Start the containers
+docker compose down
+docker compose up -d
+
+echo "Thunder Buddy is now running on http://localhost:$HOST_PORT" 
