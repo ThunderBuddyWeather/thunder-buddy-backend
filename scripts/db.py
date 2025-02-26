@@ -1,34 +1,75 @@
 #!/usr/bin/env python3
-"""Test database connectivity using psycopg2"""
+"""
+Database module for Thunder Buddy application
+Provides standardized SQLAlchemy-based database access
+"""
 
+import logging
 import os
-import sys
-from pathlib import Path
-from typing import Dict
+from typing import Any, Dict, Optional
 
-# pylint: disable=import-error
-import psycopg2  # type: ignore
-from dotenv import load_dotenv
-from sqlalchemy import create_engine, text
+from sqlalchemy import Engine, create_engine, text
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.pool import QueuePool
 
-# Find and load environment variables from project root
-project_root = Path(__file__).parent.parent
-env_path = project_root / ".env.local"
-load_dotenv(env_path)
+# Configure logging
+logger = logging.getLogger(__name__)
 
-# Print for debugging
-print(f"Loading env from: {env_path}")
-print(f"DATABASE_URL: {os.getenv('DATABASE_URL')}")
+# Global engine instance
+_engine: Optional[Engine] = None
 
 
-def get_engine(database_url=None):
-    """Create and return a SQLAlchemy engine instance"""
-    conn_url = database_url or os.environ["DATABASE_URL"]
-    return create_engine(conn_url)
+def get_database_url() -> str:
+    """Get database URL from environment variables"""
+    return os.environ.get("DATABASE_URL", "")
 
 
-def test_connection(database_url=None) -> Dict[str, str]:
-    """Test database connection using environment variables or provided URL"""
+def get_engine() -> Engine:
+    """
+    Get or create SQLAlchemy engine with connection pooling
+    Returns a singleton engine instance
+    """
+    global _engine  # pylint: disable=global-statement
+
+    if _engine is None:
+        database_url = get_database_url()
+        if not database_url:
+            raise ValueError("DATABASE_URL environment variable is not set")
+
+        # Create engine with connection pooling
+        _engine = create_engine(
+            database_url,
+            poolclass=QueuePool,
+            pool_size=5,                # Default connection pool size
+            max_overflow=10,            # Allow up to 10 connections to overflow
+            pool_timeout=30,            # Wait up to 30 seconds for a connection
+            pool_recycle=1800,          # Recycle connections after 30 minutes
+            pool_pre_ping=True,         # Verify connections before using them
+        )
+
+        logger.info("Database engine initialized with connection pooling")
+
+    return _engine
+
+
+# Create a scoped session factory
+# This ensures thread safety when used in a multi-threaded environment
+SessionFactory = scoped_session(sessionmaker())
+
+
+def init_db() -> None:
+    """Initialize database connection"""
+    engine = get_engine()
+    SessionFactory.configure(bind=engine)
+    logger.info("Database session factory configured")
+
+
+def test_connection() -> Dict[str, str]:
+    """
+    Test database connection using SQLAlchemy
+    Returns a dictionary with connection status information
+    """
     db_status = {
         "connection": "unhealthy",
         "query": "unhealthy",
@@ -36,45 +77,57 @@ def test_connection(database_url=None) -> Dict[str, str]:
     }
 
     try:
-        # Use provided URL or fall back to environment variable
-        try:
-            conn_url = database_url or os.environ["DATABASE_URL"]
-        except KeyError:
-            db_status["message"] = (
-                "Database configuration error: "
-                "DATABASE_URL environment variable is not set"
-            )
-            return db_status
+        # Get or create engine
+        engine = get_engine()
 
-        # Test query execution using SQLAlchemy
-        try:
-            engine = get_engine(conn_url)
-            # If we got an engine successfully, mark connection as healthy
+        # Test basic connection by creating a connection
+        with engine.connect() as connection:
             db_status["connection"] = "healthy"
 
-            with engine.connect() as connection:
-                result = connection.execute(text("SELECT 1")).scalar()
-                if result == 1:
-                    db_status["query"] = "healthy"
-                    db_status["message"] = "Database connection and query successful"
-                else:
-                    db_status["message"] = "Query returned unexpected result"
-        except Exception as e:
-            db_status["message"] = f"Database check failed: {str(e)}"
-            db_status["connection"] = "unhealthy"  # Reset connection status on error
+            # Test query execution
+            query_result = connection.execute(text("SELECT 1")).scalar()
+            if query_result == 1:
+                db_status["query"] = "healthy"
+                db_status["message"] = "Database connection and query successful"
+            else:
+                db_status["message"] = "Query returned unexpected result"
 
-    except Exception as e:
-        db_status["message"] = f"Database check failed: {str(e)}"
+    except ValueError as error:
+        db_status["message"] = f"Database configuration error: {str(error)}"
+    except SQLAlchemyError as error:
+        db_status["message"] = f"Database check failed: {str(error)}"
 
     return db_status
 
 
-if __name__ == "__main__":
-    result = test_connection()
-    print("Database Health Check Results:")
-    print(f"Connection: {result['connection']}")
-    print(f"Query: {result['query']}")
-    print(f"Message: {result['message']}")
-    sys.exit(
-        0 if result["connection"] == "healthy" and result["query"] == "healthy" else 1
-    )
+def execute_query(query: str, params: Optional[Dict[str, Any]] = None) -> Any:
+    """
+    Execute a SQL query using SQLAlchemy
+
+    Args:
+        query: SQL query string
+        params: Optional parameters for the query
+
+    Returns:
+        Query result
+
+    Raises:
+        SQLAlchemyError: If the query fails
+    """
+    if params is None:
+        params = {}
+
+    try:
+        # Create a new session
+        session = SessionFactory()
+
+        try:
+            # Execute query
+            result = session.execute(text(query), params)
+            return result
+        finally:
+            # Always close the session
+            session.close()
+    except SQLAlchemyError as error:
+        logger.error("Database query failed: %s", str(error))
+        raise

@@ -30,8 +30,6 @@ if get_swaggerui_blueprint:
         SWAGGER_URL, API_URL, config={"app_name": "Thunder Buddy API"}
     )
 
-from scripts.db import test_connection  # noqa: E402
-
 app = Flask(__name__)
 
 # Register Swagger UI blueprint if available

@@ -15,7 +15,7 @@ import pytest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
-def pytest_configure(config):
+def pytest_configure(config):  # pylint: disable=unused-argument
     """
     Configure the test environment.
 

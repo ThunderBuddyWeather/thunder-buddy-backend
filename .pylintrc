@@ -90,7 +90,8 @@ disable=C0303,  # trailing-whitespace (handled by formatter)
         W0613,  # unused-argument (needed for hooks and callbacks)
         E0401,  # import-error (for dependencies)
         R0913,  # too-many-arguments (can be valid)
-        R0914   # too-many-locals (can be valid in complex functions)
+        R0914,  # too-many-locals (can be valid in complex functions)
+        F0011   # config-parse-error (for duplicate sections)
 
 [BASIC]
 # Regular expressions for various naming styles
@@ -162,9 +163,7 @@ ignored-classes=SQLObject,SQLAlchemy,scoped_session
 
 [MISCELLANEOUS]
 # List of note tags to take into consideration
-notes=FIXME,XXX,TODO,HACK [MASTER]
-# Specify a configuration file.
-# rcfile=
+notes=FIXME,XXX,TODO,HACK
 
 # Python code to execute, usually for sys.path manipulation such as
 # pygtk.require().

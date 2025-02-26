@@ -8,7 +8,6 @@ Script to automatically generate OpenAPI/Swagger specification from Flask routes
 import inspect
 import os
 import sys
-from pathlib import Path
 from typing import Any, Dict
 
 # Add parent directory to path BEFORE any other imports
@@ -16,7 +15,6 @@ root_dir = os.path.dirname(os.path.dirname(__file__))
 sys.path.append(str(root_dir))
 
 from dotenv import load_dotenv  # noqa: E402
-from flask import Flask, request  # noqa: E402
 
 # Load environment variables from .env.local if it exists
 env_path = os.path.join(root_dir, ".env.local")
@@ -65,8 +63,8 @@ def analyze_route_params(func) -> list:
                         "description": f"Parameter {param_name}",
                     }
                 )
-            except Exception:  # Remove unused 'e' variable
-                print(f"Warning: Failed to parse parameter from line: {line}")
+            except (IndexError, ValueError) as e:
+                print(f"Warning: Failed to parse parameter from line: {line}. Error: {str(e)}")
 
     return params
 
