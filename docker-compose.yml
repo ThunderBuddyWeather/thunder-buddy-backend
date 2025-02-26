@@ -10,11 +10,11 @@ services:
       - DB_HOST=db
       - DB_PORT=5432
       - DB_USER=thunderbuddy
-      - DB_PASSWORD=localdev
+      - DB_PASSWORD=${DB_PASSWORD:-localdev}
       - DB_NAME=thunderbuddy
       - DB_ADMIN_USER=postgres
       - DB_ADMIN_PASSWORD=postgres
-      - DATABASE_URL=postgresql://thunderbuddy:localdev@db:5432/thunderbuddy
+      - DATABASE_URL=postgresql://thunderbuddy:${DB_PASSWORD:-localdev}@db:5432/thunderbuddy
       - WEATHERBIT_API_KEY=${WEATHERBIT_API_KEY}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]

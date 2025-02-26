@@ -88,12 +88,21 @@ runs:
       run: |
         # Create a temporary directory for deployment files
         mkdir -p ~/deploy-temp
-        cp docker-compose.yml Dockerfile requirements.txt .env.local ~/deploy-temp/
+        cp docker-compose.yml Dockerfile requirements.txt .env.ci .env.local ~/deploy-temp/
         cp -r scripts/ ~/deploy-temp/
         cp main.py ~/deploy-temp/
 
+        # Ensure static directory exists and is copied
+        mkdir -p static
+        cp -r static/ ~/deploy-temp/
+
+        # Copy .env.ci for the Dockerfile
+        cp .env.ci ~/deploy-temp/.env.ci
+
         # Copy all files to EC2
         scp -i ~/.ssh/ec2_key -r ~/deploy-temp/* ${{ inputs.username }}@${{ inputs.host }}:~/thunder-buddy/
+        scp -i ~/.ssh/ec2_key -r ~/deploy-temp/.env.ci ${{ inputs.username }}@${{ inputs.host }}:~/thunder-buddy/
+        scp -i ~/.ssh/ec2_key -r ~/deploy-temp/.env.local ${{ inputs.username }}@${{ inputs.host }}:~/thunder-buddy/
         echo "All deployment files copied to EC2"
 
     - name: Deploy to EC2
@@ -115,6 +124,7 @@ runs:
           echo "Setting up environment..."
           export DOCKER_USERNAME=${{ inputs.docker_username }}
           export DB_PASSWORD=${{ inputs.db_password }}
+          export WEATHERBIT_API_KEY=${{ inputs.weatherbit_api_key }}
 
           echo "Stopping existing containers (preserving volumes)..."
           docker compose down --remove-orphans || true

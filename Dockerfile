@@ -13,8 +13,8 @@ WORKDIR /app
 # This file lists all the Python dependencies your app requires.
 COPY requirements.txt .
 
-# Copy the .env file into the container.
-COPY .env.ci .env
+# Copy the .env.ci file as .env
+COPY .env.ci .env.ci
 
 # Install Python dependencies specified in requirements.txt.
 # The --no-cache-dir flag prevents pip from caching package downloads,
@@ -25,7 +25,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY main.py .
 COPY scripts/ scripts/
 
-# Create static directory if it doesn't exist
+# Copy the static directory
 COPY static/ static/
 
 # Copy the startup script into the container
@@ -33,8 +33,6 @@ COPY scripts/startup.sh .
 
 # Copy the init_db_user script into the container
 COPY scripts/init_db_user.py .
-
-COPY .env.ci .
 
 # Make the startup script executable
 RUN chmod +x scripts/startup.sh
