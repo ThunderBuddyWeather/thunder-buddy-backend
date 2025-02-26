@@ -36,14 +36,18 @@ app = Flask(__name__)
 if get_swaggerui_blueprint:
     app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
 
-load_dotenv()
+# Try to load from .env.local first, then fall back to .env
+if os.path.exists(".env.local"):
+    load_dotenv(dotenv_path=".env.local")
+else:
+    load_dotenv()  # Default .env file
 
 # Initialize database connection
 init_db()
 
 # fmt: off
-WEATHERBIT_API_KEY = os.getenv("WEATHERBIT_API_KEY",
-                               "d0f6ba4e6ca24b08a0896b004a08b2ac")  # noqa: E501
+# Use environment variable with fallback for deployment scenarios
+WEATHERBIT_API_KEY = os.getenv("WEATHERBIT_API_KEY", "d0f6ba4e6ca24b08a0896b004a08b2ac")
 timeout = int(os.getenv("REQUEST_TIMEOUT", "10"))  # Default as string "10"
 # fmt: on
 

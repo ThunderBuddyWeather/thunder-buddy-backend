@@ -1,53 +1,49 @@
----
-services:
-  db:
-    image: postgres:15-alpine
-    container_name: thunder-buddy-db
-    env_file:
-      - ${ENV_FILE:-.env.local}
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-postgres}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-localdev}
-    ports:
-      - "5432:5432"
-    volumes:
-      - thunder_buddy_postgres_15:/var/lib/postgresql/data
-      - ./docker/db/init.sql:/docker-entrypoint-initdb.d/init.sql
-    networks:
-      - thunder-buddy-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U thunderbuddy -d thunderbuddy"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+version: "3.8"
 
+services:
   app:
-    image: ${DOCKER_USERNAME:-thunderbuddy}/thunder-buddy:latest
+    build: .
     container_name: thunder-buddy
-    env_file:
-      - ${ENV_FILE:-.env.local}
     ports:
-      - "${HOST_PORT:-5001}:5000"
-    environment:
-      - DATABASE_URL=postgresql://thunderbuddy:${DB_PASSWORD:-localdev}@db:5432/thunderbuddy
-      - DB_PASSWORD=${DB_PASSWORD:-localdev}
+      - "5000:5000"
     depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - thunder-buddy-network
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=thunderbuddy
+      - DB_PASSWORD=localdev
+      - DB_NAME=thunderbuddy
+      - DB_ADMIN_USER=postgres
+      - DB_ADMIN_PASSWORD=postgres
+      - DATABASE_URL=postgresql://thunderbuddy:localdev@db:5432/thunderbuddy
+      - WEATHERBIT_API_KEY=${WEATHERBIT_API_KEY}
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:5000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 10s
       timeout: 5s
       retries: 3
       start_period: 10s
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    container_name: thunder-buddy-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
 
 volumes:
-  thunder_buddy_postgres_15:
-    name: thunder_buddy_postgres_15
-
-networks:
-  thunder-buddy-network:
-    name: thunder-buddy-network
+  postgres_data:

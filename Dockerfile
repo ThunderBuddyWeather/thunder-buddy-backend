@@ -2,8 +2,8 @@
 # The slim version reduces the overall image size.
 FROM python:3.12-slim
 
-# Install curl and wget for healthchecks
-RUN apt-get update && apt-get install -y curl wget && rm -rf /var/lib/apt/lists/*
+# Install curl, wget, and PostgreSQL client tools for database initialization
+RUN apt-get update && apt-get install -y curl wget postgresql-client && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory inside the container.
 # All subsequent commands run within this directory.
@@ -12,6 +12,9 @@ WORKDIR /app
 # Copy the requirements file into the container.
 # This file lists all the Python dependencies your app requires.
 COPY requirements.txt .
+
+# Copy the .env file into the container.
+COPY .env.ci .env
 
 # Install Python dependencies specified in requirements.txt.
 # The --no-cache-dir flag prevents pip from caching package downloads,
@@ -25,6 +28,9 @@ COPY scripts/ scripts/
 # Create static directory if it doesn't exist
 COPY static/ static/
 
+# Make the startup script executable
+RUN chmod +x scripts/startup.sh
+
 # Expose port 5000 so that the container listens on this port at runtime.
 EXPOSE 5000
 
@@ -32,13 +38,14 @@ EXPOSE 5000
 ENV DB_HOST=db \
   DB_PORT=5432 \
   DB_NAME=thunderbuddy \
-  DB_USERNAME=thunderbuddy \
+  DB_USER=thunderbuddy \
   DB_PASSWORD=localdev \
+  DB_ADMIN_USER=postgres \
+  DB_ADMIN_PASSWORD=postgres \
   DATABASE_URL=postgresql://thunderbuddy:localdev@db:5432/thunderbuddy
 
-# Set the container's entrypoint to run your application.
-# ENTRYPOINT enforces that the command will always be run.
-ENTRYPOINT ["python", "main.py"]
+# Set the container's entrypoint to run our startup script.
+ENTRYPOINT ["scripts/startup.sh"]
 
 # Define default arguments to the ENTRYPOINT via CMD.
 # Using an empty array (CMD []) here is a best practice, as it allows you
