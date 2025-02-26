@@ -80,7 +80,7 @@ def init_db_user():
                 logger.info("Creating database user '%s'", app_user)
                 cursor.execute(
                     "CREATE USER %s WITH PASSWORD %s",
-                    (app_user, app_password)
+                    (psycopg2.extensions.AsIs(app_user), app_password)
                 )
             else:
                 logger.info("User '%s' already exists", app_user)

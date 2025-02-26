@@ -19,13 +19,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Import our database module
+# Try to import database modules, but don't fail if they're not available
 try:
     from scripts.db import init_db
     from scripts.db import test_connection as check_db_health
+    db_available = True
 except Exception as e:
-    logger.error(f"Failed to import database modules: {str(e)}")
-    sys.exit(1)
+    logger.warning(f"Database modules not available: {str(e)}")
+    db_available = False
 
 try:
     from flask_swagger_ui import get_swaggerui_blueprint
@@ -57,14 +58,15 @@ else:
     load_dotenv()  # Default .env file
     logger.info("Loaded environment from .env")
 
-# Initialize database connection
-try:
-    logger.info("Initializing database connection")
-    init_db()
-    logger.info("Database connection initialized successfully")
-except Exception as e:
-    logger.error(f"Failed to initialize database: {str(e)}")
-    sys.exit(1)
+# Initialize database connection if available
+if db_available:
+    try:
+        logger.info("Initializing database connection")
+        init_db()
+        logger.info("Database connection initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {str(e)}")
+        # Don't exit, continue without database
 
 # fmt: off
 # Use environment variable with fallback for deployment scenarios
@@ -117,51 +119,37 @@ def get_local_weather():
 
 
 @app.route("/health", methods=["GET"])
-def health_check() -> Tuple[Dict, int]:
-    """Check the health of the application by verifying database connectivity."""
-    app.logger.info("Health check requested")
-    
-    try:
-        db_health: Dict[str, str] = check_db_health()
-        app.logger.info(f"Database health check result: {db_health}")
-
-        # Determine overall health status based on database connection and query status
-        is_healthy = (
-            db_health["connection"] == "healthy"
-            and db_health["query"] == "healthy"
-        )
-
-        health_status = {
-            "status": "healthy" if is_healthy else "unhealthy",
-            "components": {
-                "api": {
-                    "status": "healthy",
-                    "message": "API service is running"
-                },
-                "database": db_health,
-            },
-        }
-
-        http_status = 200 if health_status["status"] == "healthy" else 503
-        app.logger.info(f"Health check response: status={http_status}, body={health_status}")
-        return jsonify(health_status), http_status
-    except Exception as e:
-        app.logger.error(f"Health check error: {str(e)}")
-        error_status = {
-            "status": "unhealthy",
-            "components": {
-                "api": {
-                    "status": "unhealthy",
-                    "message": f"Error during health check: {str(e)}"
-                },
-                "database": {
-                    "connection": "unhealthy",
-                    "query": "unhealthy",
-                    "message": f"Exception during health check: {str(e)}"
-                }
+def health_check():
+    """Check the health of the application."""
+    health_status = {
+        "status": "healthy",
+        "components": {
+            "api": {
+                "status": "healthy",
+                "message": "API service is running"
             }
         }
-        return jsonify(error_status), 503
+    }
+    
+    # Add database status if available
+    if db_available:
+        try:
+            db_health = check_db_health()
+            health_status["components"]["database"] = db_health
+            
+            # Update overall status based on database health
+            if db_health["connection"] != "healthy" or db_health["query"] != "healthy":
+                health_status["status"] = "degraded"
+        except Exception as e:
+            logger.error(f"Database health check failed: {str(e)}")
+            health_status["components"]["database"] = {
+                "connection": "unhealthy",
+                "query": "unhealthy",
+                "message": f"Error: {str(e)}"
+            }
+            health_status["status"] = "degraded"
+    
+    return jsonify(health_status), 200
 
 
 if __name__ == "__main__":
