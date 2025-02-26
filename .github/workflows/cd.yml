@@ -32,7 +32,7 @@ jobs:
         uses: ./.github/actions/ec2-deploy
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
+          username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           docker_username: ${{ secrets.DOCKER_USERNAME }}
           db_password: ${{ secrets.DB_PASSWORD }}
