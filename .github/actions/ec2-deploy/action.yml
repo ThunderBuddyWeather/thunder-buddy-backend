@@ -92,6 +92,10 @@ runs:
         cp -r scripts/ ~/deploy-temp/
         cp main.py ~/deploy-temp/
 
+        # Ensure static directory and files are copied
+        mkdir -p ~/deploy-temp/static
+        cp -r static/* ~/deploy-temp/static/ || true
+
         ls -lart ~/deploy-temp/
 
         # Copy all files to EC2
@@ -138,9 +142,23 @@ runs:
           # Remove only containers, not volumes
           docker rm -f thunder-buddy thunder-buddy-db || true
 
+          # Ensure static directory exists and copy swagger file
+          echo "Setting up static files..."
+          mkdir -p static
+          cp -f static/swagger.yaml static/ || true  # Copy if exists locally
+
           echo "Pulling and starting containers..."
           docker compose pull
           docker compose up -d
+
+          # Copy swagger file into the running container's static directory
+          echo "Copying swagger file into container..."
+          if [ -f "static/swagger.yaml" ]; then
+            docker cp static/swagger.yaml thunder-buddy:/app/static/
+            echo "Swagger file copied successfully"
+          else
+            echo "Warning: swagger.yaml not found locally"
+          fi
 
           echo "Waiting for services to be healthy..."
           # Wait for DB to be ready (max 30 seconds)
