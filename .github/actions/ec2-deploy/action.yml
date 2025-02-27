@@ -110,6 +110,19 @@ runs:
           DB_PASSWORD=${{ inputs.db_password }}
         script: |
           echo "Starting remote deployment process..."
+
+          echo "Cleaning up disk space..."
+          # Remove unused Docker resources
+          docker system prune -af
+          # Clean up old images and build cache
+          docker builder prune -af
+          # Remove dangling volumes (be careful with this in production)
+          docker volume prune -f
+          # Clean package manager cache
+          sudo apt-get clean
+          # Remove old logs
+          sudo find /var/log -type f -name "*.log" -exec truncate -s 0 {} \;
+
           echo "Creating thunder-buddy directory..."
           mkdir -p ~/thunder-buddy
           cd ~/thunder-buddy
@@ -149,7 +162,7 @@ runs:
               docker compose logs
               exit 1
             fi
-            sleep 2
+            sleep 1
           done
 
           # Final connectivity test
