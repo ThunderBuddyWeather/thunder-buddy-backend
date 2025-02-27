@@ -36,7 +36,7 @@ services:
       - DATABASE_URL=postgresql://thunderbuddy:localdev@db:5432/thunderbuddy
       - WEATHERBIT_API_KEY=${WEATHERBIT_API_KEY}
     volumes:
-      - .:/app
+      - thunder_buddy_static:/app/static
     depends_on:
       db:
         condition: service_healthy
@@ -52,6 +52,8 @@ services:
 volumes:
   thunder_buddy_postgres_15:
     name: thunder_buddy_postgres_15
+  thunder_buddy_static:
+    name: thunder_buddy_static
 
 networks:
   thunder-buddy-network:
