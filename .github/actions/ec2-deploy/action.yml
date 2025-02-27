@@ -139,11 +139,12 @@ runs:
           docker rm -f thunder-buddy thunder-buddy-db || true
 
           echo "Creating temporary container to initialize static volume..."
-          # Create a temporary container to initialize the static volume
+          # Initialize static volume by overriding the container command
           docker run --rm \
             -v thunder_buddy_static:/static \
+            --entrypoint cp \
             ${{ inputs.docker_username }}/thunder-buddy:latest \
-            cp -r /app/static/* /static/
+            -r /app/static/. /static/
 
           echo "Pulling and starting containers..."
           docker compose pull
