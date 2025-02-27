@@ -21,27 +21,67 @@ COPY .env.ci .
 # which helps reduce the final image size.
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application files
+# Copy application files first
 COPY main.py .
 COPY scripts/ scripts/
+COPY tests/ tests/
 
-# Create static directory if it doesn't exist
-COPY static/ static/
+# Create static directory and ensure it exists
+RUN mkdir -p static && \
+  echo "Created static directory at:" && \
+  pwd && \
+  ls -la
+
+# Generate swagger.yaml during build with verbose output
+RUN echo "Generating swagger.yaml..." && \
+  python -v scripts/generate_swagger.py && \
+  echo "Checking generated files:" && \
+  ls -la static/ && \
+  if [ -f static/swagger.yaml ]; then \
+  echo "swagger.yaml was generated successfully" && \
+  cat static/swagger.yaml | head -n 5 && \
+  # Ensure proper permissions
+  chmod 644 static/swagger.yaml && \
+  # Make a backup copy
+  cp static/swagger.yaml static/swagger.yaml.bak; \
+  else \
+  echo "swagger.yaml was not generated!" && \
+  exit 1; \
+  fi
+
+# Create a volume for the static directory
+VOLUME ["/app/static"]
 
 # Expose port 5000 so that the container listens on this port at runtime.
 EXPOSE 5000
 
 # Environment variables
-ENV DB_HOST=db \
+ENV PYTHONDONTWRITEBYTECODE=1 \
+  PYTHONUNBUFFERED=1 \
+  FLASK_ENV=development \
+  FLASK_DEBUG=1 \
+  DB_HOST=db \
   DB_PORT=5432 \
   DB_NAME=thunderbuddy \
   DB_USERNAME=thunderbuddy \
   DB_PASSWORD=localdev \
   DATABASE_URL=postgresql://thunderbuddy:localdev@db:5432/thunderbuddy
 
-# Set the container's entrypoint to run your application.
-# ENTRYPOINT enforces that the command will always be run.
-ENTRYPOINT ["python", "main.py"]
+# Copy the static files to a safe location and create an entrypoint script
+RUN echo '#!/bin/sh\n\
+  if [ ! -f /app/static/swagger.yaml ] && [ -f /app/static/swagger.yaml.bak ]; then\n\
+  echo "Restoring swagger.yaml from backup..."\n\
+  cp /app/static/swagger.yaml.bak /app/static/swagger.yaml\n\
+  fi\n\
+  if [ ! -f /app/static/swagger.yaml ]; then\n\
+  echo "Generating swagger.yaml..."\n\
+  python scripts/generate_swagger.py\n\
+  fi\n\
+  exec python main.py\n' > /app/entrypoint.sh && \
+  chmod +x /app/entrypoint.sh
+
+# Set the container's entrypoint to our new script
+ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Define default arguments to the ENTRYPOINT via CMD.
 # Using an empty array (CMD []) here is a best practice, as it allows you

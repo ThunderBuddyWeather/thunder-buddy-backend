@@ -1,7 +1,33 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "thunder-buddy"
+version = "0.1.0"
+authors = [
+    { name = "Thunder Buddy Team" },
+]
+description = "Thunder Buddy Backend"
+requires-python = ">=3.8"
+dependencies = [
+    "flask>=3.1.0",
+    "flask-swagger-ui>=4.11.1",
+    "psycopg2-binary>=2.9.9",
+    "python-dotenv>=1.0.1",
+    "requests>=2.32.3",
+    "sqlalchemy>=2.0.28",
+    "pyyaml>=6.0.1",
+]
+
+[tool.setuptools]
+packages = ["scripts"]
+
 [tool.black]
 line-length = 88
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
 include = '\.pyi?$'
-exclude = '''
+extend-exclude = '''
 /(
     \.git
   | \.venv
@@ -11,6 +37,11 @@ exclude = '''
   | dist
   | \.eggs
   | \.tox
+  | \.mypy_cache
+  | \.pytest_cache
+  | __pycache__
+  | \.coverage
+  | htmlcov
 )/
 '''
 
@@ -22,9 +53,105 @@ include_trailing_comma = true
 force_grid_wrap = 0
 use_parentheses = true
 ensure_newline_before_comments = true
-skip = [".git", "venv", ".venv", "env", "build", "dist"]
+skip = [
+    ".git",
+    "venv",
+    ".venv",
+    "env",
+    "build",
+    "dist",
+    "__pycache__",
+    "*.pyc",
+    "*.egg-info"
+]
+skip_glob = [
+    "docs/*",
+    "logs/*",
+    "htmlcov/*"
+]
 
 [tool.flake8]
 max-line-length = 88
-extend-ignore = ["E203", "W503", "E402"]
-exclude = [".git", "venv", ".venv", "env", "build", "dist", "__pycache__", "*.pyc", "*.egg-info"] 
+extend-ignore = ["E203", "W503", "E231", "E501", "F401", "F403", "F405"]
+exclude = [
+    ".git",
+    ".gitignore",
+    ".env",
+    ".venv",
+    "venv",
+    "env",
+    "build",
+    "dist",
+    "__pycache__",
+    "*.pyc",
+    "*.pyo",
+    "*.pyd",
+    "*.so",
+    "*.dll",
+    "*.dylib",
+    ".tox",
+    ".coverage",
+    ".coverage.*",
+    ".pytest_cache",
+    ".mypy_cache",
+    "htmlcov",
+    "site-packages",
+    "lib/python*",
+    "**/site-packages/**",
+    "**/lib/python*/**",
+    "**/venv/**",
+    "**/.venv/**",
+    "**/env/**",
+    "**/.env/**",
+    "*.egg-info",
+    "*.egg"
+]
+max-complexity = 12
+statistics = true
+count = true
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = false
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+exclude = [
+    "tests/",
+    "setup.py",
+    "docs/",
+    "build/",
+    "dist/",
+    "*.pyi"
+]
+
+[tool.coverage.run]
+branch = true
+source = ["scripts"]
+omit = [
+    "tests/*",
+    "setup.py",
+    "docs/*",
+    "*/__init__.py",
+    "*/migrations/*"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "pass",
+    "\\.\\.\\."
+]
+show_missing = true
+fail_under = 80 
