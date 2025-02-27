@@ -35,8 +35,14 @@ services:
     environment:
       - DATABASE_URL=postgresql://thunderbuddy:localdev@db:5432/thunderbuddy
       - WEATHERBIT_API_KEY=${WEATHERBIT_API_KEY}
+      - FLASK_DEBUG=true
+      - FLASK_ENV=development
+      - PYTHONPATH=/src
     volumes:
       - thunder_buddy_static:/app/static
+      - .:/src
+    working_dir: /src
+    command: python main.py
     depends_on:
       db:
         condition: service_healthy

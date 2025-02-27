@@ -92,9 +92,10 @@ runs:
         cp -r scripts/ ~/deploy-temp/
         cp main.py ~/deploy-temp/
 
-        ls -lart ~/deploy-temp/
+        # First ensure the remote directory exists
+        ssh -i ~/.ssh/ec2_key ${{ inputs.username }}@${{ inputs.host }} "mkdir -p ~/thunder-buddy"
 
-        # Copy all files to EC2
+        # Copy deployment files to EC2 (excluding static files)
         scp -i ~/.ssh/ec2_key -r ~/deploy-temp/* ~/deploy-temp/.[!.]* ${{ inputs.username }}@${{ inputs.host }}:~/thunder-buddy/
         echo "All deployment files copied to EC2"
 
@@ -110,8 +111,22 @@ runs:
           DB_PASSWORD=${{ inputs.db_password }}
         script: |
           echo "Starting remote deployment process..."
+
+          echo "Cleaning up disk space..."
+          # Remove unused containers and images, but keep volumes
+          docker system prune -af --volumes=false
+          # Clean up build cache
+          docker builder prune -af
+          # Clean package manager cache
+          sudo apt-get clean
+          # Remove old logs
+          sudo find /var/log -type f -name "*.log" -exec truncate -s 0 {} \;
+
+          # List current volumes to verify they're preserved
+          echo "Current Docker volumes:"
+          docker volume ls
+
           echo "Creating thunder-buddy directory..."
-          mkdir -p ~/thunder-buddy
           cd ~/thunder-buddy
 
           echo "Setting up environment..."
@@ -122,6 +137,14 @@ runs:
           docker compose down --remove-orphans || true
           # Remove only containers, not volumes
           docker rm -f thunder-buddy thunder-buddy-db || true
+
+          echo "Creating temporary container to initialize static volume..."
+          # Initialize static volume by overriding the container command
+          docker run --rm \
+            -v thunder_buddy_static:/static \
+            --entrypoint cp \
+            ${{ inputs.docker_username }}/thunder-buddy:latest \
+            -r /app/static/. /static/
 
           echo "Pulling and starting containers..."
           docker compose pull
@@ -149,7 +172,7 @@ runs:
               docker compose logs
               exit 1
             fi
-            sleep 2
+            sleep 1
           done
 
           # Final connectivity test
