@@ -92,15 +92,10 @@ runs:
         cp -r scripts/ ~/deploy-temp/
         cp main.py ~/deploy-temp/
 
-        # Ensure static directory and files are copied with proper permissions
-        mkdir -p ~/deploy-temp/static
-        cp -r static/* ~/deploy-temp/static/ || true
-        chmod -R 755 ~/deploy-temp
+        # First ensure the remote directory exists
+        ssh -i ~/.ssh/ec2_key ${{ inputs.username }}@${{ inputs.host }} "mkdir -p ~/thunder-buddy"
 
-        # First ensure the remote directory exists with proper permissions
-        ssh -i ~/.ssh/ec2_key ${{ inputs.username }}@${{ inputs.host }} "mkdir -p ~/thunder-buddy && chmod 755 ~/thunder-buddy"
-
-        # Copy all files to EC2
+        # Copy deployment files to EC2 (excluding static files)
         scp -i ~/.ssh/ec2_key -r ~/deploy-temp/* ~/deploy-temp/.[!.]* ${{ inputs.username }}@${{ inputs.host }}:~/thunder-buddy/
         echo "All deployment files copied to EC2"
 
@@ -131,16 +126,7 @@ runs:
           echo "Current Docker volumes:"
           docker volume ls
 
-          echo "Creating thunder-buddy directory and setting permissions..."
-          # Remove old directory if exists and recreate with proper permissions
-          rm -rf ~/thunder-buddy
-          mkdir -p ~/thunder-buddy
-          chmod 755 ~/thunder-buddy
-
-          # Create static directory with proper permissions
-          mkdir -p ~/thunder-buddy/static
-          chmod 755 ~/thunder-buddy/static
-
+          echo "Creating thunder-buddy directory..."
           cd ~/thunder-buddy
 
           echo "Setting up environment..."
@@ -152,20 +138,16 @@ runs:
           # Remove only containers, not volumes
           docker rm -f thunder-buddy thunder-buddy-db || true
 
+          echo "Creating temporary container to initialize static volume..."
+          # Create a temporary container to initialize the static volume
+          docker run --rm \
+            -v thunder_buddy_static:/static \
+            ${{ inputs.docker_username }}/thunder-buddy:latest \
+            cp -r /app/static/* /static/
+
           echo "Pulling and starting containers..."
           docker compose pull
           docker compose up -d
-
-          # Ensure static files are properly set up in the container
-          echo "Setting up static files in container..."
-          if [ -f "static/swagger.yaml" ]; then
-            # Copy file and set proper permissions
-            docker cp static/swagger.yaml thunder-buddy:/app/static/
-            docker exec thunder-buddy chmod 644 /app/static/swagger.yaml
-            echo "Swagger file copied and permissions set"
-          else
-            echo "Warning: swagger.yaml not found locally"
-          fi
 
           echo "Waiting for services to be healthy..."
           # Wait for DB to be ready (max 30 seconds)
