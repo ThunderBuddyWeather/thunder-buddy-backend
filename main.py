@@ -108,7 +108,7 @@ def test():
     return jsonify({
         "message": "this works",
         "timestamp": datetime.now().isoformat(),
-        "auto_reload": "Auto-reload is now STILL working! This message was updated."
+        "auto_reload": "Auto-reload is now working in Docker with direct source code mounting!"
     }), 200
 
 
