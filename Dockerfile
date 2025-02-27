@@ -24,9 +24,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application files
 COPY main.py .
 COPY scripts/ scripts/
+COPY tests/ tests/
 
-# Create static directory if it doesn't exist
-COPY static/ static/
+# Create static directory
+RUN mkdir -p static
+
+# Generate swagger.yaml during build
+RUN python scripts/generate_swagger.py
 
 # Expose port 5000 so that the container listens on this port at runtime.
 EXPOSE 5000
