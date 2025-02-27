@@ -21,16 +21,29 @@ COPY .env.ci .
 # which helps reduce the final image size.
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application files
+# Copy application files first
 COPY main.py .
 COPY scripts/ scripts/
 COPY tests/ tests/
 
-# Create static directory
-RUN mkdir -p static
+# Create static directory and ensure it exists
+RUN mkdir -p static && \
+  echo "Created static directory at:" && \
+  pwd && \
+  ls -la
 
-# Generate swagger.yaml during build
-RUN python scripts/generate_swagger.py
+# Generate swagger.yaml during build with verbose output
+RUN echo "Generating swagger.yaml..." && \
+  python -v scripts/generate_swagger.py && \
+  echo "Checking generated files:" && \
+  ls -la static/ && \
+  if [ -f static/swagger.yaml ]; then \
+  echo "swagger.yaml was generated successfully" && \
+  cat static/swagger.yaml | head -n 5; \
+  else \
+  echo "swagger.yaml was not generated!" && \
+  exit 1; \
+  fi
 
 # Expose port 5000 so that the container listens on this port at runtime.
 EXPOSE 5000
