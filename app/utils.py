@@ -18,7 +18,7 @@ def encode_token(user_id):
     payload = {
         'exp': datetime.now(timezone.utc) + timedelta(days=1),
         'iat': datetime.now(timezone.utc),
-        'sub': user_id
+        'sub': str(user_id)
     }
     token = jwt.encode(payload, current_app.config['SECRET_KEY'], algorithm='HS256')
     return token
@@ -39,7 +39,7 @@ def token_required(f):
 
         try:
             payload = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms="HS256")
-            current_user_id = payload['sub']
+            current_user_id = int(payload['sub'])
         except jwt.ExpiredSignatureError:
             return jsonify({'message': 'Token has expired'}), 401
         except jwt.InvalidTokenError:

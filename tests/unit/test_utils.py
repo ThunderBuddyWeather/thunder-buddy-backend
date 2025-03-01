@@ -31,7 +31,7 @@ def test_encode_token(app):
         assert isinstance(token, str)
         # Decode and verify token
         payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
-        assert payload['sub'] == user_id
+        assert payload['sub'] == str(user_id)
 
 def test_token_required_valid_token(app, client):
     """Test token_required decorator with valid token"""
