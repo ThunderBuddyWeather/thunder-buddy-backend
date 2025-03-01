@@ -13,6 +13,7 @@ from flask_swagger_ui import get_swaggerui_blueprint
 from .config import DevelopmentConfig, ProductionConfig, TestingConfig
 from .extensions import caching, db, limiter, ma
 from .Models import userAccountModel
+from .Routes.devRoute import dev_blueprint
 from .Routes.friendshipRoute import friendship_blueprint
 from .Routes.userAccountRoute import user_account_blueprint
 
@@ -66,6 +67,11 @@ def create_app(config_name):
 
     app.register_blueprint(user_account_blueprint, url_prefix="/api/user")
     app.register_blueprint(friendship_blueprint, url_prefix="/api/friends")
+    
+    # Only register dev routes in development mode
+    if config_name == "development":
+        app.register_blueprint(dev_blueprint, url_prefix="/dev")
+        app.logger.info("Registered development routes at /dev")
 
     with app.app_context():
         db.create_all()

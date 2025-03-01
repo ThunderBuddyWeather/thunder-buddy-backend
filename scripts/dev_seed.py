@@ -9,6 +9,7 @@ import random
 from datetime import UTC, datetime
 
 from faker import Faker
+from werkzeug.security import generate_password_hash
 
 from app import create_app
 from app.extensions import db
@@ -76,13 +77,16 @@ def generate_users(count=50):
         # Get random ZIP code and location
         zip_code, location = random.choice(US_ZIP_CODES)
         
-        # Create user with generated data - using the same password for all users
+        # Generate a simple phone number format to avoid DB constraint errors
+        phone_number = f"{random.randint(100, 999)}-{random.randint(100, 999)}-{random.randint(1000, 9999)}"
+        
+        # Create user with generated data - using the same password for all users but properly hashed
         user = UserAccount(
             user_username=username,
-            user_password=DEFAULT_PASSWORD,
+            user_password=generate_password_hash(DEFAULT_PASSWORD),
             user_name=fake.name(),
             user_email=email,
-            user_phone=fake.phone_number(),
+            user_phone=phone_number,
             user_address=f"{fake.street_address()}, {location} {zip_code}",
             user_location=location,
             user_weather="",  # Weather will be determined by the application
@@ -98,24 +102,32 @@ def create_friendships(users):
     logger.info("Creating random friendships between users...")
     friendships = []
     
+    # Create a list of user IDs for reference
+    user_ids = [user.user_id for user in users]
+    
     for user in users:
-        # Determine number of friends for this user (4-10)
-        num_friends = random.randint(4, 10)
-        
-        # Get random friends
-        potential_friends = [u for u in users if u.user_id != user.user_id]
-        if len(potential_friends) < num_friends:
-            num_friends = len(potential_friends)
+        # Skip if user ID is None (not yet committed to database)
+        if user.user_id is None:
+            logger.warning(f"Skipping friendship creation for user with no ID")
+            continue
             
-        friends = random.sample(potential_friends, num_friends)
+        # Determine number of friends for this user (4-10)
+        num_friends = random.randint(4, min(10, len(users) - 1))
+        
+        # Get random friends - excluding self
+        potential_friend_ids = [uid for uid in user_ids if uid != user.user_id]
+        if len(potential_friend_ids) < num_friends:
+            num_friends = len(potential_friend_ids)
+            
+        friend_ids = random.sample(potential_friend_ids, num_friends)
         
         # Create friendship relationships
-        for friend in friends:
+        for friend_id in friend_ids:
             # Ensure we don't create duplicate friendships
-            if user.user_id < friend.user_id:  # Only create one direction
+            if user.user_id < friend_id:  # Only create one direction
                 friendship = Friendship(
                     user1_id=user.user_id,
-                    user2_id=friend.user_id,
+                    user2_id=friend_id,
                     friendship_status=random.choice(['pending', 'accepted'])
                 )
                 friendships.append(friendship)
@@ -188,6 +200,9 @@ def seed_development_data():
         logger.info("Creating users...")
         users = generate_users(50)
         db.session.add_all(users)
+        
+        # Commit users to the database to get their IDs before creating friendships
+        logger.info("Committing users to database...")
         db.session.commit()
         
         # Save users to properties file after they've been committed to get their IDs
@@ -196,6 +211,8 @@ def seed_development_data():
         logger.info("Creating friendships...")
         friendships = create_friendships(users)
         db.session.add_all(friendships)
+        
+        logger.info("Committing friendships to database...")
         db.session.commit()
         
         logger.info(f"Development data seeding completed. Created {len(users)} users and {len(friendships)} friendships.")

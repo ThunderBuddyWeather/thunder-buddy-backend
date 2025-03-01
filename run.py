@@ -45,7 +45,7 @@ def health_check() -> Tuple[Dict, int]:
     health_status = {
         "status": "healthy" if is_healthy else "unhealthy",
         "components": {
-            "api": {"status": "healthy", "message": "API service is running"},
+            "api": {"status": "healthy", "message": "API service is runningfff"},
             "database": db_health,
         },
     }
