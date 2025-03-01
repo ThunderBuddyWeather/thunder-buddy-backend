@@ -1,14 +1,6 @@
 #!/bin/bash
-# Development restart script - stops containers and restarts in development mode
+# Launcher script for restart-dev.sh
+# This script is maintained for backward compatibility
 
-set -e
-
-echo "Restarting Thunder Buddy API in development mode..."
-
-# Stop running containers using stop.sh
-echo "Stopping running containers..."
-./stop.sh
-
-# Start containers in development mode
-echo "Starting in development mode with auto-reload..."
-./dev.sh 
+# Execute the actual implementation in scripts/shell directory
+"$(dirname "$0")/scripts/shell/restart-dev.sh" "$@" 

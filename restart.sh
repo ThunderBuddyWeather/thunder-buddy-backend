@@ -1,13 +1,6 @@
 #!/bin/bash
+# Launcher script for restart.sh
+# This script is maintained for backward compatibility
 
-echo "Restarting Thunder Buddy services..."
-
-# Execute stop.sh
-echo "Stopping services..."
-./stop.sh
-
-# Execute start.sh
-echo "Starting services..."
-./start.sh
-
-echo "Restart completed successfully!" 
+# Execute the actual implementation in scripts/shell directory
+"$(dirname "$0")/scripts/shell/restart.sh" "$@" 

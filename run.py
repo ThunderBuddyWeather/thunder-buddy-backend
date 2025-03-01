@@ -3,6 +3,7 @@ Thunder Buddy API service built with Flask
 Provides user account management and friendship features
 """
 
+import os
 from typing import Dict, Tuple
 
 from dotenv import load_dotenv
@@ -11,11 +12,18 @@ from flask import jsonify
 from app import create_app
 from scripts.db import test_connection as check_db_health
 
+# Import the seed script for development mode
+from scripts.dev_seed import seed_development_data
+
 # Load environment variables
 load_dotenv()
 
 # Create the application instance
 app = create_app("development")
+
+# Run seed data for development mode if enabled
+if os.environ.get("FLASK_ENV") == "development" or os.environ.get("DEV_SEED_ENABLED") == "true":
+    seed_development_data()
 
 
 @app.route("/", methods=["GET"])
