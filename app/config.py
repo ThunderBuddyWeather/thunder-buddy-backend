@@ -1,3 +1,5 @@
+"""Configuration for the application"""
+
 import os
 from datetime import timedelta
 
