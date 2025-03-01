@@ -9,7 +9,7 @@ on:
   workflow_dispatch: # Allow manual triggering
 
 jobs:
-  unit-tests:
+  code-validation:
     runs-on: ubuntu-latest
 
     services:
@@ -57,7 +57,7 @@ jobs:
         run: |
           python -m pytest tests/unit/ -v
 
-  test:
+  api-validation:
     runs-on: ubuntu-latest
 
     services:
@@ -121,7 +121,7 @@ jobs:
           test -f static/swagger.yaml || (echo "Swagger generation failed" && exit 1)
 
   build:
-    needs: test
+    needs: api-validation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
