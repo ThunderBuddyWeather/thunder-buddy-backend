@@ -72,4 +72,4 @@ def list_all_users() -> Tuple[Response, int]:
         
     except Exception as e:
         logger.error(f"Error retrieving users: {str(e)}")
-        return jsonify({"message": "Error retrieving users"}), 500 
+        return jsonify({"message": "Error retrieving users"}), 500
