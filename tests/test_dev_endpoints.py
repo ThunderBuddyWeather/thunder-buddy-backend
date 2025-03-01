@@ -59,27 +59,28 @@ class TestDevEndpoints(unittest.TestCase):
     def test_users_endpoint_in_dev_mode(self):
         """Test that users endpoint works in development mode"""
         # Mock the database query to return a list of users
-        with patch.object(UserAccount, 'query') as mock_query:
-            # Set up the mock to return a mock user list
-            mock_users = []
-            mock_query.all.return_value = mock_users
-            
-            # Make request to the users endpoint
-            response = self.dev_client.get('/dev/users')
-            
-            # Check that the response is successful
-            self.assertEqual(response.status_code, 200)
-            
-            # Parse the response data
-            data = json.loads(response.data)
-            
-            # Check the response contains expected fields
-            self.assertIn('users', data)
-            self.assertIn('count', data)
-            self.assertEqual(data['environment'], 'development')
-            
-            # Verify the query was called
-            mock_query.all.assert_called_once()
+        with self.dev_app.app_context():
+            with patch.object(UserAccount, 'query') as mock_query:
+                # Set up the mock to return a mock user list
+                mock_users = []
+                mock_query.all.return_value = mock_users
+                
+                # Make request to the users endpoint
+                response = self.dev_client.get('/dev/users')
+                
+                # Check that the response is successful
+                self.assertEqual(response.status_code, 200)
+                
+                # Parse the response data
+                data = json.loads(response.data)
+                
+                # Check the response contains expected fields
+                self.assertIn('users', data)
+                self.assertIn('count', data)
+                self.assertEqual(data['environment'], 'development')
+                
+                # Verify the query was called
+                mock_query.all.assert_called_once()
 
     def test_users_endpoint_in_prod_mode(self):
         """Test that users endpoint is not available in production mode"""
