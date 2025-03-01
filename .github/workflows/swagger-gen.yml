@@ -11,6 +11,23 @@ on:
 jobs:
   generate-swagger:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: thunder_buddy
+        ports:
+          - 5432:5432
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -36,13 +53,13 @@ jobs:
           echo "DB_PORT=5432" >> .env.local
           echo "DB_NAME=thunder_buddy" >> .env.local
           echo "DB_USERNAME=postgres" >> .env.local
-          echo "DB_PASSWORD=placeholder" >> .env.local
-          echo "DATABASE_URL=postgresql://postgres:placeholder@localhost:5432/thunder_buddy" >> .env.local
+          echo "DB_PASSWORD=postgres" >> .env.local
+          echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/thunder_buddy" >> .env.local
 
       - name: Generate Swagger documentation
         run: make swagger
         env:
-          DATABASE_URL: postgresql://postgres:placeholder@localhost:5432/thunder_buddy
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/thunder_buddy
 
       - name: Commit and push if changes
         if: github.event_name != 'pull_request'
