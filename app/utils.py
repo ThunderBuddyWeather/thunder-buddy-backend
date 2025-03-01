@@ -1,24 +1,26 @@
 import os
-from datetime import datetime, timedelta
-from flask import jsonify, request
-import jwt  
-from dotenv import load_dotenv
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 
-load_dotenv()
-SECRET_KEY = os.getenv('SECRET_KEY')
+import jwt
+from dotenv import load_dotenv
+from flask import current_app, jsonify, request
 
-def get_remote_address(request):
-    return request.remote_address
+load_dotenv()
+SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key')
+
+def get_remote_address():
+    """Get the remote address of the request"""
+    return request.remote_addr or '127.0.0.1'
 
 def encode_token(user_id):
+    """Generate JWT token for user"""
     payload = {
-        'exp': datetime.now() + timedelta(days=0, hours=1),
-        'iat': datetime.now(),
+        'exp': datetime.now(timezone.utc) + timedelta(days=1),
+        'iat': datetime.now(timezone.utc),
         'sub': user_id
     }
-    
-    token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')  
+    token = jwt.encode(payload, current_app.config['SECRET_KEY'], algorithm='HS256')
     return token
 
 def token_required(f):
@@ -26,20 +28,24 @@ def token_required(f):
     def decorated(*args, **kwargs):
         token = None
         if 'Authorization' in request.headers:
+            auth_header = request.headers['Authorization']
             try:
-                token = request.headers['Authorization'].split(" ")[1]
-                print("Token:", token)
-                payload = jwt.decode(token, SECRET_KEY, algorithms="HS256") 
-            except jwt.ExpiredSignatureError: 
-                return jsonify({'message': 'Token has expired', 'error': 'Unauthorized'}), 401
-            except jwt.InvalidTokenError: 
-                return jsonify({'message': 'Invalid Token', 'error': 'Unauthorized'}), 401
-            if not token:
-                return jsonify({'message': 'Authentication token is missing', 'error': 'Unauthorized'}), 401
-        else:
-            return jsonify({'message': 'Token is missing', 'error': 'Unauthorized'}), 401
+                token = auth_header.split(" ")[1]
+            except IndexError:
+                return jsonify({'message': 'Token is missing'}), 401
 
-    
+        if not token:
+            return jsonify({'message': 'Token is missing'}), 401
+
+        try:
+            payload = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms="HS256")
+            current_user_id = payload['sub']
+        except jwt.ExpiredSignatureError:
+            return jsonify({'message': 'Token has expired'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'message': 'Token is invalid'}), 401
+        except Exception as e:
+            return jsonify({'message': 'Token is invalid'}), 401
+
         return f(*args, **kwargs)
-
     return decorated

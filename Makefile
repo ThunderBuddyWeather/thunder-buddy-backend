@@ -67,7 +67,17 @@ lint-fix:
 
 # Run tests with coverage
 coverage:
-	python -m pytest --cov=. tests/ --cov-report=html
+	@echo "Checking if database is running..."
+	@if ! docker ps | grep -q thunder-buddy-db; then \
+		echo "Starting database container for tests..."; \
+		docker-compose up -d db; \
+		echo "Waiting for database to be ready..."; \
+		sleep 5; \
+	else \
+		echo "Database container is already running."; \
+	fi
+	@echo "Running tests with coverage report..."
+	PYTHONPATH=. DATABASE_URL="postgresql://thunderbuddy:localdev@localhost:5432/thunderbuddy" python -m pytest --cov=app --cov=run tests/ --cov-report=html
 
 # Clean up Python artifacts
 clean:
