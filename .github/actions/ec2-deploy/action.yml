@@ -88,7 +88,7 @@ runs:
       run: |
         # Create a temporary directory for deployment files
         mkdir -p ~/deploy-temp
-
+        
         # Copy regular files
         cp docker-compose.yml Dockerfile requirements.txt .env.local ~/deploy-temp/
         cp -r scripts/ ~/deploy-temp/
@@ -96,7 +96,7 @@ runs:
         cp -r tests/ ~/deploy-temp/
         cp -r docker/ ~/deploy-temp/
         cp run.py ~/deploy-temp/
-
+        
         # Find and copy any other hidden config files that might be needed
         # This excludes .git directories and other unnecessary hidden files
         find . -maxdepth 1 -name ".*" -type f \
@@ -111,10 +111,10 @@ runs:
 
         # Copy all files to EC2, including hidden files
         scp -i ~/.ssh/ec2_key -r ~/deploy-temp/* ${{ inputs.username }}@${{ inputs.host }}:~/thunder-buddy/
-
+        
         # Copy hidden files separately to ensure they're included
         find ~/deploy-temp -maxdepth 1 -name ".*" -type f -exec scp -i ~/.ssh/ec2_key {} ${{ inputs.username }}@${{ inputs.host }}:~/thunder-buddy/ \;
-
+        
         echo "All deployment files copied to EC2"
 
     - name: Deploy to EC2
