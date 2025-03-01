@@ -90,7 +90,11 @@ runs:
         mkdir -p ~/deploy-temp
         cp docker-compose.yml Dockerfile requirements.txt .env.local ~/deploy-temp/
         cp -r scripts/ ~/deploy-temp/
-        cp main.py ~/deploy-temp/
+        cp -r app/ ~/deploy-temp/
+        cp -r static/ ~/deploy-temp/ 2>/dev/null || mkdir -p ~/deploy-temp/static
+        cp -r tests/ ~/deploy-temp/
+        cp -r docker/ ~/deploy-temp/
+        cp run.py ~/deploy-temp/
 
         ls -lart ~/deploy-temp/
 
