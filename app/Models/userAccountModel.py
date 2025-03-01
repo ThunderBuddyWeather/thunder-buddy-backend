@@ -6,7 +6,7 @@ from ..extensions import db
 
 
 class UserAccount(db.Model):
-    __tablename__ = 'user_account'
+    __tablename__ = "user_account"
 
     user_id = db.Column(db.Integer, primary_key=True)
     user_username = db.Column(db.String(50), unique=True, nullable=False)
@@ -20,14 +20,24 @@ class UserAccount(db.Model):
     user_profile_picture = db.Column(db.String(255))
     user_time_created = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
 
-    def __init__(self, user_username, user_password, user_name, user_email, user_phone=None, 
-                 user_address=None, user_location=None, user_weather=None, user_profile_picture=None):
+    def __init__(
+        self,
+        user_username,
+        user_password,
+        user_name,
+        user_email,
+        user_phone=None,
+        user_address=None,
+        user_location=None,
+        user_weather=None,
+        user_profile_picture=None,
+    ):
         self.user_username = user_username
         self.user_password = user_password
         self.user_name = user_name
         self.user_email = user_email
-        self.user_phone = user_phone or ''
-        self.user_address = user_address or ''
-        self.user_location = user_location or ''
-        self.user_weather = user_weather or ''
-        self.user_profile_picture = user_profile_picture or ''
+        self.user_phone = user_phone or ""
+        self.user_address = user_address or ""
+        self.user_location = user_location or ""
+        self.user_weather = user_weather or ""
+        self.user_profile_picture = user_profile_picture or ""

@@ -10,18 +10,20 @@ migrate = Migrate()
 jwt = JWTManager()
 
 # Update caching to use direct backend class
-caching = Cache(config={
-    'CACHE_TYPE': 'flask_caching.backends.SimpleCache',
-    'CACHE_DEFAULT_TIMEOUT': 300
-})
+caching = Cache(
+    config={
+        "CACHE_TYPE": "flask_caching.backends.SimpleCache",
+        "CACHE_DEFAULT_TIMEOUT": 300,
+    }
+)
 
 # Update limiter to use Redis for production
 limiter = Limiter(
     key_func=get_remote_address,
     storage_uri="memory://",  # This will be overridden in production config
     storage_options={},
-    default_limits=["200 per day", "50 per hour"]
+    default_limits=["200 per day", "50 per hour"],
 )
 
 db = SQLAlchemy()
-ma = Marshmallow() 
+ma = Marshmallow()

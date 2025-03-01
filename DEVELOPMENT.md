@@ -11,6 +11,7 @@ To start the application in development mode with auto-reload:
 ```
 
 This script:
+
 1. Creates `.env.local` from `.env` if it doesn't exist and adds development variables
 2. Sets up Docker Compose to use both the main config and development overrides
 3. Runs the standard `start.sh` script with development configuration enabled
@@ -27,6 +28,7 @@ The following scripts are available for development:
 | `./stop.sh` | Stop all running containers |
 
 Use `rebuild-dev.sh` when:
+
 - You've made changes to the Dockerfile
 - You've updated dependencies in requirements.txt
 - You're experiencing strange behavior that might be caused by cached Docker layers

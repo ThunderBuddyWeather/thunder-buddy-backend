@@ -8,22 +8,24 @@ from flask import Flask, jsonify
 def app():
     """Create test Flask app"""
     app = Flask(__name__)
-    app.config['TESTING'] = True
-    
+    app.config["TESTING"] = True
+
     # Add root route for testing
-    @app.route('/')
+    @app.route("/")
     def hello():
         return jsonify({"Message": "Hello World"})
-        
+
     return app
+
 
 @pytest.fixture
 def client(app):
     """Create test client"""
     return app.test_client()
 
+
 def test_hello_world(client):
     """Test hello world endpoint"""
-    response = client.get('/')
+    response = client.get("/")
     assert response.status_code == 200
-    assert response.json['Message'] == 'Hello World'
+    assert response.json["Message"] == "Hello World"

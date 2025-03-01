@@ -525,31 +525,11 @@
                 "properties": {
                   "name": {
                     "type": "string"
-                  },
-                  "phone": {
-                    "type": "string"
-                  },
-                  "address": {
-                    "type": "string"
-                  },
-                  "location": {
-                    "type": "string"
-                  },
-                  "weather": {
-                    "type": "string"
-                  },
-                  "profile_picture": {
-                    "type": "string"
                   }
                 }
               },
               "example": {
-                "name": "John Doe",
-                "phone": "example value",
-                "address": "example value",
-                "location": "New York, NY",
-                "weather": "example value",
-                "profile_picture": "example value"
+                "name": "John Doe"
               }
             }
           },

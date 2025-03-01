@@ -9,26 +9,28 @@ from flask import Flask, jsonify
 
 from app.utils import encode_token, get_remote_address, token_required
 
-TEST_SECRET_KEY = 'test-secret-key'
+TEST_SECRET_KEY = "test-secret-key"
 
 # Check if running in CI environment
-IN_CI = os.environ.get('CI') == 'true'
+IN_CI = os.environ.get("CI") == "true"
 skip_in_ci = pytest.mark.skipif(
-    IN_CI, 
-    reason="JWT authentication tests are skipped in CI environment"
+    IN_CI, reason="JWT authentication tests are skipped in CI environment"
 )
+
 
 @pytest.fixture
 def app():
     """Create and configure a new app instance for each test."""
     app = Flask(__name__)
-    app.config['SECRET_KEY'] = TEST_SECRET_KEY
+    app.config["SECRET_KEY"] = TEST_SECRET_KEY
     return app
+
 
 @pytest.fixture
 def client(app):
     """A test client for the app."""
     return app.test_client()
+
 
 @skip_in_ci
 def test_encode_token(app):
@@ -38,8 +40,9 @@ def test_encode_token(app):
         token = encode_token(user_id)
         assert isinstance(token, str)
         # Decode and verify token
-        payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
-        assert payload['sub'] == str(user_id)
+        payload = jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])
+        assert payload["sub"] == str(user_id)
+
 
 @skip_in_ci
 def test_token_required_valid_token(app, client):
@@ -48,38 +51,43 @@ def test_token_required_valid_token(app, client):
         user_id = 123
         token = encode_token(user_id)
 
-        @app.route('/test')
+        @app.route("/test")
         @token_required
         def test_route():
-            return jsonify({'message': 'success'}), 200
+            return jsonify({"message": "success"}), 200
 
-        response = client.get('/test', headers={'Authorization': f'Bearer {token}'})
+        response = client.get("/test", headers={"Authorization": f"Bearer {token}"})
         assert response.status_code == 200
-        assert response.json['message'] == 'success'
+        assert response.json["message"] == "success"
+
 
 @skip_in_ci
 def test_token_required_missing_token(app, client):
     """Test token_required decorator with missing token"""
-    @app.route('/test')
+
+    @app.route("/test")
     @token_required
     def test_route():
-        return jsonify({'message': 'success'}), 200
+        return jsonify({"message": "success"}), 200
 
-    response = client.get('/test')
+    response = client.get("/test")
     assert response.status_code == 401
-    assert 'Token is missing' in response.json['message']
+    assert "Token is missing" in response.json["message"]
+
 
 @skip_in_ci
 def test_token_required_invalid_token(app, client):
     """Test token_required decorator with invalid token"""
-    @app.route('/test')
+
+    @app.route("/test")
     @token_required
     def test_route():
-        return jsonify({'message': 'success'}), 200
+        return jsonify({"message": "success"}), 200
 
-    response = client.get('/test', headers={'Authorization': 'Bearer invalid_token'})
+    response = client.get("/test", headers={"Authorization": "Bearer invalid_token"})
     assert response.status_code == 401
-    assert 'Token is invalid' in response.json['message']
+    assert "Token is invalid" in response.json["message"]
+
 
 @skip_in_ci
 def test_token_required_expired_token(app, client):
@@ -87,23 +95,26 @@ def test_token_required_expired_token(app, client):
     with app.app_context():
         # Create an expired token
         payload = {
-            'exp': datetime.now(timezone.utc) - timedelta(hours=1),
-            'iat': datetime.now(timezone.utc) - timedelta(hours=2),
-            'sub': 123
+            "exp": datetime.now(timezone.utc) - timedelta(hours=1),
+            "iat": datetime.now(timezone.utc) - timedelta(hours=2),
+            "sub": 123,
         }
-        expired_token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
+        expired_token = jwt.encode(payload, app.config["SECRET_KEY"], algorithm="HS256")
 
-        @app.route('/test')
+        @app.route("/test")
         @token_required
         def test_route():
-            return jsonify({'message': 'success'}), 200
+            return jsonify({"message": "success"}), 200
 
-        response = client.get('/test', headers={'Authorization': f'Bearer {expired_token}'})
+        response = client.get(
+            "/test", headers={"Authorization": f"Bearer {expired_token}"}
+        )
         assert response.status_code == 401
-        assert 'Token has expired' in response.json['message']
+        assert "Token has expired" in response.json["message"]
+
 
 def test_get_remote_address(app):
     """Test getting remote address"""
     with app.test_request_context():
         address = get_remote_address()
-        assert address == '127.0.0.1' 
+        assert address == "127.0.0.1"

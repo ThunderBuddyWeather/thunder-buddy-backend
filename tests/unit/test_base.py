@@ -10,7 +10,8 @@ from app import create_app
 from app.extensions import db
 
 # Load test environment variables
-load_dotenv('.env.test')
+load_dotenv(".env.test")
+
 
 class BaseTestCase:
     @pytest.fixture(autouse=True)
@@ -19,39 +20,41 @@ class BaseTestCase:
         # Create app with test config
         self.app = create_app("testing")
         self.app.config["TESTING"] = True
-        
+
         # Create test client
         self.client = self.app.test_client()
-        
+
         # Create all tables
         with self.app.app_context():
             db.drop_all()  # Clean up any existing tables
             db.create_all()
-        
+
         yield
-        
+
         # Clean up after test
         with self.app.app_context():
             db.session.remove()
             db.drop_all()
 
-    def create_test_user(self, email: str = "test@example.com", password: str = "password123") -> Dict[str, Any]:
+    def create_test_user(
+        self, email: str = "test@example.com", password: str = "password123"
+    ) -> Dict[str, Any]:
         """Helper to create a test user and return their data"""
-        response = self.client.post("/api/user/register", json={
-            "email": email,
-            "password": password,
-            "name": "Test User"
-        })
+        response = self.client.post(
+            "/api/user/register",
+            json={"email": email, "password": password, "name": "Test User"},
+        )
         return response.get_json()
 
-    def login_test_user(self, email: str = "test@example.com", password: str = "password123") -> str:
+    def login_test_user(
+        self, email: str = "test@example.com", password: str = "password123"
+    ) -> str:
         """Helper to login a test user and return their access token"""
-        response = self.client.post("/api/user/login", json={
-            "email": email,
-            "password": password
-        })
+        response = self.client.post(
+            "/api/user/login", json={"email": email, "password": password}
+        )
         return response.get_json()["access_token"]
 
     def get_auth_headers(self, token: str) -> Dict[str, str]:
         """Helper to create authorization headers"""
-        return {"Authorization": f"Bearer {token}"} 
+        return {"Authorization": f"Bearer {token}"}

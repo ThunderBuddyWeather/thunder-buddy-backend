@@ -55,9 +55,7 @@ test-integration:
 
 # Run linting
 lint:
-	flake8 .
-	pylint --ignore=venv,env,.venv,.env,build,dist --rcfile=.pylintrc **/*.py
-	flake8 .
+	flake8 --config=.flake8 .
 	pylint --ignore=venv,env,.venv,.env,build,dist --rcfile=.pylintrc **/*.py
 
 # Auto-fix linting issues where possible
