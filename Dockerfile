@@ -70,6 +70,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 # Copy the static files to a safe location and create an entrypoint script
 RUN echo '#!/bin/sh\n\
+  # Copy source files from mounted volume\n\
+  if [ -d /src ]; then\n\
+  echo "Copying source files from /src..."\n\
+  cp -f /src/main.py /app/\n\
+  cp -rf /src/scripts /app/\n\
+  cp -rf /src/tests /app/\n\
+  fi\n\
   if [ ! -f /app/static/swagger.yaml ] && [ -f /app/static/swagger.yaml.bak ]; then\n\
   echo "Restoring swagger.yaml from backup..."\n\
   cp /app/static/swagger.yaml.bak /app/static/swagger.yaml\n\

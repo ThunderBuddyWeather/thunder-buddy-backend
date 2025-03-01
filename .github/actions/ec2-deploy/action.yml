@@ -88,7 +88,7 @@ runs:
       run: |
         # Create a temporary directory for deployment files
         mkdir -p ~/deploy-temp
-        
+
         # Copy regular files
         cp docker-compose.yml Dockerfile requirements.txt .env.local ~/deploy-temp/
         cp -r scripts/ ~/deploy-temp/
@@ -96,7 +96,7 @@ runs:
         cp -r tests/ ~/deploy-temp/
         cp -r docker/ ~/deploy-temp/
         cp run.py ~/deploy-temp/
-        
+
         # Find and copy any other hidden config files that might be needed
         # This excludes .git directories and other unnecessary hidden files
         find . -maxdepth 1 -name ".*" -type f \
@@ -111,10 +111,10 @@ runs:
 
         # Copy all files to EC2, including hidden files
         scp -i ~/.ssh/ec2_key -r ~/deploy-temp/* ${{ inputs.username }}@${{ inputs.host }}:~/thunder-buddy/
-        
+
         # Copy hidden files separately to ensure they're included
         find ~/deploy-temp -maxdepth 1 -name ".*" -type f -exec scp -i ~/.ssh/ec2_key {} ${{ inputs.username }}@${{ inputs.host }}:~/thunder-buddy/ \;
-        
+
         echo "All deployment files copied to EC2"
 
     - name: Deploy to EC2
@@ -129,8 +129,22 @@ runs:
           DB_PASSWORD=${{ inputs.db_password }}
         script: |
           echo "Starting remote deployment process..."
+
+          echo "Cleaning up disk space..."
+          # Remove unused containers and images, but keep volumes
+          docker system prune -af --volumes=false
+          # Clean up build cache
+          docker builder prune -af
+          # Clean package manager cache
+          sudo apt-get clean
+          # Remove old logs
+          sudo find /var/log -type f -name "*.log" -exec truncate -s 0 {} \;
+
+          # List current volumes to verify they're preserved
+          echo "Current Docker volumes:"
+          docker volume ls
+
           echo "Creating thunder-buddy directory..."
-          mkdir -p ~/thunder-buddy
           cd ~/thunder-buddy
 
           echo "Setting up environment..."
@@ -141,6 +155,14 @@ runs:
           docker compose down --remove-orphans || true
           # Remove only containers, not volumes
           docker rm -f thunder-buddy thunder-buddy-db || true
+
+          echo "Creating temporary container to initialize static volume..."
+          # Initialize static volume by overriding the container command
+          docker run --rm \
+            -v thunder_buddy_static:/static \
+            --entrypoint cp \
+            ${{ inputs.docker_username }}/thunder-buddy:latest \
+            -r /app/static/. /static/
 
           echo "Pulling and starting containers..."
           docker compose pull
@@ -168,7 +190,7 @@ runs:
               docker compose logs
               exit 1
             fi
-            sleep 2
+            sleep 1
           done
 
           # Final connectivity test
