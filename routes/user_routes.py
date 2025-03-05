@@ -1,10 +1,12 @@
-from flask import Flask, jsonify, request
-from main import app
+from flask import Blueprint, jsonify, request
 
 from models.models import WeatherLog, User
 
+user_routes = Blueprint('user_routes', __name__)
 
-@app.route("/register", methods=["POST"])
+
+
+@user_routes.route("/register", methods=["POST"])
 def register():
     """
     Register a new user.
