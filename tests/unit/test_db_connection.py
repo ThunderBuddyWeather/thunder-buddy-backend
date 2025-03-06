@@ -15,6 +15,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from scripts.db import test_connection as get_db_connection
 
 
+@pytest.mark.regression
 def test_connection_basic():
     """Test that the connection function returns a dictionary."""
     with patch("scripts.db.get_engine") as mock_engine:
@@ -41,6 +42,7 @@ def test_connection_response_structure():
         assert "query" in result
 
 
+@pytest.mark.regression
 def test_db_connection_success():
     """Test successful database connection."""
     with patch("scripts.db.get_engine") as mock_engine:

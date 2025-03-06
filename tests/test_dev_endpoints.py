@@ -8,10 +8,13 @@ import unittest
 from typing import List
 from unittest.mock import patch
 
+import pytest
+
 from app import create_app
 from app.Models.userAccountModel import UserAccount
 
 
+@pytest.mark.regression
 class TestDevEndpoints(unittest.TestCase):
     """Test cases for development endpoints"""
 

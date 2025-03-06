@@ -1,4 +1,19 @@
-.PHONY: help test test-unit test-integration lint coverage clean install dev-env yamlint yamlint-fix swagger setup
+.PHONY: help test test-unit test-integration test-regression lint coverage clean install dev-env yamlint yamlint-fix swagger setup start stop restart rebuild rebuild-dev start-dev restart-dev
+
+# Platform detection
+ifeq ($(OS),Windows_NT)
+    DETECTED_OS := Windows
+    SHELL_EXT := bat
+else
+    DETECTED_OS := $(shell uname -s)
+    ifeq ($(DETECTED_OS),Darwin)
+        DETECTED_OS := MacOS
+    endif
+    ifeq ($(DETECTED_OS),Linux)
+        DETECTED_OS := Linux
+    endif
+    SHELL_EXT := sh
+endif
 
 # Default target when just running 'make'
 help:
@@ -7,15 +22,24 @@ help:
 	@echo "  make test             - Run all tests"
 	@echo "  make test-unit        - Run unit tests only"
 	@echo "  make test-integration - Run integration tests only"
+	@echo "  make test-regression  - Run regression tests only"
 	@echo "  make lint             - Run linting checks"
 	@echo "  make coverage         - Run tests with coverage report"
 	@echo "  make clean            - Remove Python file artifacts"
 	@echo "  make dev-env          - Set up development environment"
 	@echo "  make setup            - Run the setup.py script to configure the development environment"
-	@echo "  make setup            - Run the setup.py script to configure the development environment"
 	@echo "  make yamlint          - Run YAML linting"
 	@echo "  make yamlint-fix      - Auto-fix YAML formatting issues"
 	@echo "  make swagger          - Generate Swagger/OpenAPI specification"
+	@echo "  make start            - Start the application"
+	@echo "  make stop             - Stop the application"
+	@echo "  make restart          - Restart the application"
+	@echo "  make start-dev        - Start in development mode"
+	@echo "  make restart-dev      - Restart the application in development mode"
+	@echo "  make rebuild          - Rebuild and start the application"
+	@echo "  make rebuild-dev      - Rebuild and start in development mode"
+	@echo ""
+	@echo "Detected OS: $(DETECTED_OS)"
 
 # Install dependencies
 install:
@@ -52,6 +76,20 @@ test-integration:
 	fi
 	@echo "Running integration tests with DATABASE_URL set..."
 	PYTHONPATH=. DATABASE_URL="postgresql://thunderbuddy:localdev@localhost:5432/thunderbuddy" python -m pytest tests/integration/ -v -m integration
+
+# Run regression tests only
+test-regression:
+	@echo "Checking if database is running..."
+	@if ! docker ps | grep -q thunder-buddy-db; then \
+		echo "Starting database container for regression tests..."; \
+		docker-compose up -d db; \
+		echo "Waiting for database to be ready..."; \
+		sleep 5; \
+	else \
+		echo "Database container is already running."; \
+	fi
+	@echo "Running regression tests..."
+	PYTHONPATH=. DATABASE_URL="postgresql://thunderbuddy:localdev@localhost:5432/thunderbuddy" python -m pytest -v -m regression
 
 # Run linting
 lint:
@@ -133,4 +171,61 @@ swagger:
 	else \
 		echo "No virtual environment found, running directly"; \
 		python scripts/generate_swagger.py; \
+	fi
+
+# Cross-platform app management targets
+start:
+	@echo "Starting application on $(DETECTED_OS)..."
+	@if [ "$(DETECTED_OS)" = "Windows" ]; then \
+		bin/start.bat; \
+	else \
+		./bin/start.sh; \
+	fi
+
+stop:
+	@echo "Stopping application on $(DETECTED_OS)..."
+	@if [ "$(DETECTED_OS)" = "Windows" ]; then \
+		bin/stop.bat; \
+	else \
+		./bin/stop.sh; \
+	fi
+
+restart:
+	@echo "Restarting application on $(DETECTED_OS)..."
+	@if [ "$(DETECTED_OS)" = "Windows" ]; then \
+		bin/restart.bat; \
+	else \
+		./bin/restart.sh; \
+	fi
+
+start-dev:
+	@echo "Starting development mode on $(DETECTED_OS)..."
+	@if [ "$(DETECTED_OS)" = "Windows" ]; then \
+		bin/start-dev.bat; \
+	else \
+		./bin/start-dev.sh; \
+	fi
+
+restart-dev:
+	@echo "Restarting application in development mode on $(DETECTED_OS)..."
+	@if [ "$(DETECTED_OS)" = "Windows" ]; then \
+		bin/restart-dev.bat; \
+	else \
+		./bin/restart-dev.sh; \
+	fi
+
+rebuild:
+	@echo "Rebuilding application on $(DETECTED_OS)..."
+	@if [ "$(DETECTED_OS)" = "Windows" ]; then \
+		bin/rebuild.bat; \
+	else \
+		./bin/rebuild.sh; \
+	fi
+
+rebuild-dev:
+	@echo "Rebuilding and starting development mode on $(DETECTED_OS)..."
+	@if [ "$(DETECTED_OS)" = "Windows" ]; then \
+		bin/rebuild-dev.bat; \
+	else \
+		./bin/rebuild-dev.sh; \
 	fi

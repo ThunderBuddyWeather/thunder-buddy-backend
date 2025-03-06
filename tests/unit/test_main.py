@@ -24,6 +24,7 @@ def client(app):
     return app.test_client()
 
 
+@pytest.mark.regression
 def test_hello_world(client):
     """Test hello world endpoint"""
     response = client.get("/")
