@@ -1,4 +1,4 @@
-.PHONY: help test test-unit test-integration lint coverage clean install dev-env yamlint yamlint-fix swagger setup start stop restart rebuild rebuild-dev start-dev restart-dev
+.PHONY: help test test-unit test-integration test-regression lint coverage clean install dev-env yamlint yamlint-fix swagger setup start stop restart rebuild rebuild-dev start-dev restart-dev
 
 # Platform detection
 ifeq ($(OS),Windows_NT)
@@ -22,6 +22,7 @@ help:
 	@echo "  make test             - Run all tests"
 	@echo "  make test-unit        - Run unit tests only"
 	@echo "  make test-integration - Run integration tests only"
+	@echo "  make test-regression  - Run regression tests only"
 	@echo "  make lint             - Run linting checks"
 	@echo "  make coverage         - Run tests with coverage report"
 	@echo "  make clean            - Remove Python file artifacts"
@@ -75,6 +76,20 @@ test-integration:
 	fi
 	@echo "Running integration tests with DATABASE_URL set..."
 	PYTHONPATH=. DATABASE_URL="postgresql://thunderbuddy:localdev@localhost:5432/thunderbuddy" python -m pytest tests/integration/ -v -m integration
+
+# Run regression tests only
+test-regression:
+	@echo "Checking if database is running..."
+	@if ! docker ps | grep -q thunder-buddy-db; then \
+		echo "Starting database container for regression tests..."; \
+		docker-compose up -d db; \
+		echo "Waiting for database to be ready..."; \
+		sleep 5; \
+	else \
+		echo "Database container is already running."; \
+	fi
+	@echo "Running regression tests..."
+	PYTHONPATH=. DATABASE_URL="postgresql://thunderbuddy:localdev@localhost:5432/thunderbuddy" python -m pytest -v -m regression
 
 # Run linting
 lint:

@@ -74,6 +74,7 @@ def auth_headers(app, test_user):
 
 
 @pytest.mark.integration
+@pytest.mark.regression
 def test_app_startup(client):
     """Test basic application startup and root endpoint"""
     response = client.get("/")
@@ -82,6 +83,7 @@ def test_app_startup(client):
 
 
 @pytest.mark.integration
+@pytest.mark.regression
 def test_user_registration_flow(client):
     """Test complete user registration flow"""
     # Register new user

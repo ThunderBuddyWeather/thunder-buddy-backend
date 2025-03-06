@@ -26,6 +26,11 @@ def pytest_configure(config):  # pylint: disable=unused-argument
     This function is called before tests are collected.
     It sets up environment variables for testing.
     """
+    # Register regression marker
+    config.addinivalue_line(
+        "markers", "regression: mark tests that should be run as regression tests"
+    )
+    
     # Set test database URL to match the one used in Makefile
     if "TEST_DATABASE_URL" in os.environ:
         # If TEST_DATABASE_URL is set (like in CI), use it
