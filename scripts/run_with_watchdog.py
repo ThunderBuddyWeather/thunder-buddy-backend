@@ -32,27 +32,24 @@ def run_flask_app() -> bool:
 
     try:
         # Start the Flask application
-        process = subprocess.Popen(
+        with subprocess.Popen(
             flask_cmd,
             cwd=ROOT_DIR,
             env=env,
             stdout=sys.stdout,
             stderr=sys.stderr
-        )
+        ) as process:
+            # Wait for the process to complete
+            return_code = process.wait()
 
-        # Wait for the process to complete
-        return_code = process.wait()
+            if return_code != 0:
+                logger.error(f"Flask application exited with code {return_code}")
+                return False
 
-        if return_code != 0:
-            logger.error(f"Flask application exited with code {return_code}")
-            return False
-
-        return True
+            return True
 
     except KeyboardInterrupt:
         logger.info("Received keyboard interrupt, stopping Flask application...")
-        if 'process' in locals():
-            process.terminate()
         return False
 
     except Exception as e:
@@ -78,7 +75,8 @@ def main() -> None:
 
         retry_count += 1
         if retry_count < max_retries:
-            logger.info(f"Restarting Flask application in {retry_delay} seconds (attempt {retry_count}/{max_retries})...")
+            msg = f"Restarting Flask app (attempt {retry_count}/{max_retries})..."
+            logger.info(msg)
             time.sleep(retry_delay)
         else:
             logger.error(f"Maximum retry attempts ({max_retries}) reached, giving up")
