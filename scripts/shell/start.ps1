@@ -14,8 +14,11 @@ if (Test-Path -Path ".env.local") {
     Write-Host "Loading environment variables from .env.local"
     Get-Content ".env.local" | ForEach-Object {
         if (-not $_.StartsWith("#") -and $_.Contains("=")) {
-            $key, $value = $_.Split("=", 2)
-            [Environment]::SetEnvironmentVariable($key, $value, "Process")
+            # Only process lines that are valid variable assignments
+            if ($_ -match "^[a-zA-Z_][a-zA-Z0-9_]*=.+") {
+                $key, $value = $_.Split("=", 2)
+                [Environment]::SetEnvironmentVariable($key, $value, "Process")
+            }
         }
     }
 }

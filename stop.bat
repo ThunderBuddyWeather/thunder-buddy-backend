@@ -1,4 +1,6 @@
 @echo off
-echo Stopping Thunder Buddy containers...
-docker compose down
-echo Thunder Buddy has been stopped. 
+REM Launcher script for stop.bat
+REM This script is maintained for backward compatibility
+
+REM Execute the actual implementation in scripts/shell directory
+call "%~dp0scripts\shell\stop.bat" %* 

@@ -1,0 +1,23 @@
+---
+# Development-specific docker-compose overrides
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  app:
+    volumes:
+      # Mount application code for auto-reload
+      - ./app:/app/app
+      - ./run.py:/app/run.py
+      - ./scripts:/app/scripts
+      # Keep the static volume for generated assets
+      - thunder_buddy_static:/app/static
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      # Enable auto-reload
+      - FLASK_APP_RELOAD=true
+    # For development, we want to see logs immediately
+    tty: true
+    stdin_open: true
+    # Command override to ensure reloader is enabled
+    command: python run.py

@@ -14,8 +14,8 @@ if [ -f .git/MERGE_HEAD ] || [ -f .git/REBASE_HEAD ] || [ -f .git/CHERRY_PICK_HE
     exit 0
 fi
 
-# Check if Python files in app/ or main.py have changed
-if git diff --cached --name-only | grep -E '(^app/.*\.py$|^main\.py$)'; then
+# Check if Python files in app/ or run.py have changed
+if git diff --cached --name-only | grep -E '(^app/.*\.py$|^run\.py$)'; then
     echo "Python files changed. Generating Swagger documentation..."
     
     # Save current staged changes

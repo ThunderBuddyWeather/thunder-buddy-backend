@@ -1,16 +1,70 @@
 ---
 openapi: 3.0.2
 info:
-  title: Weather API
+  title: Thunder Buddy API
   version: 1.0.0
-  description: Weather API service providing current weather data
+  description: API service providing user accounts and friendship management
   contact:
     email: your-email@example.com
+servers:
+- url: http://localhost:5000
+  description: Local development server
+- url: https://api.thunderbuddy.example.com
+  description: Production API server
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Bearer token authentication
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      example:
+        error: Error message
+        message: Additional error details
+    UserProfile:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+      example:
+        user_id: 12345
+        name: John Doe
+        email: john.doe@example.com
+        username: johndoe
+    FriendshipStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - pending
+          - accepted
+          - rejected
+        message:
+          type: string
+      example:
+        status: accepted
+        message: Friend request accepted
 paths:
-  /apidocs/dist/<path:filename>:
+  /health:
     get:
-      summary: Send Static File
-      description: The view function used to serve files from
+      summary: Health Check
+      description: Check the health of the application by verifying database connectivity.
       parameters: []
       responses:
         '200':
@@ -19,10 +73,10 @@ paths:
             application/json:
               schema:
                 type: object
-  /apidocs/<path:path>:
-    get:
-      summary: Show
-      description: Show
+  /api/user/register:
+    post:
+      summary: Register
+      description: Register a new user account
       parameters: []
       responses:
         '200':
@@ -31,10 +85,68 @@ paths:
             application/json:
               schema:
                 type: object
-  /apidocs/:
-    get:
-      summary: Show
-      description: Show
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example: &id001
+                message: Hello world!
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - email
+              - password
+              - name
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                name:
+                  type: string
+                phone:
+                  type: string
+                address:
+                  type: string
+                location:
+                  type: string
+                weather:
+                  type: string
+                profile_picture:
+                  type: string
+            example:
+              email: john.doe@example.com
+              password: SecureP@ssw0rd
+              name: John Doe
+              phone: example value
+              address: example value
+              location: New York, NY
+              weather: example value
+              profile_picture: example value
+        description: Request body parameters
+  /api/user/login:
+    post:
+      summary: Login
+      description: Login user and return access token
       parameters: []
       responses:
         '200':
@@ -43,37 +155,255 @@ paths:
             application/json:
               schema:
                 type: object
-  /:
-    get:
-      summary: Hello World
-      description: Return a simple greeting message
-      parameters: []
-      responses:
-        '200':
-          description: Successful response
+                properties:
+                  access_token:
+                    type: string
+              example: &id002
+                message: Hello world!
+                access_token: example value
+        '400':
+          description: Bad request
           content:
             application/json:
               schema:
                 type: object
-  /weather:
+                properties:
+                  message:
+                    type: string
+              example: *id002
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example: *id002
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example: *id002
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - email
+              - password
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+            example:
+              email: john.doe@example.com
+              password: SecureP@ssw0rd
+        description: Request body parameters
+  /api/user/profile:
     get:
-      summary: Get Local Weather
-      description: Return current weather data for a given ZIP code and country
+      summary: Get Profile
+      description: Get user profile information
       parameters:
-      - in: query
-        name: zip
+      - in: header
+        name: Authorization
         schema:
           type: string
-          default: '30152'
         required: true
-        description: Parameter zip
-      - in: query
-        name: country
+        description: 'JWT Bearer token (format: Bearer <token>)'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example: &id003
+                message: Hello world!
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example: *id003
+        '401':
+          description: Unauthorized - Missing or invalid authentication
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+              example:
+                msg: Missing Authorization Header
+      security:
+      - bearerAuth: []
+    put:
+      summary: Update Profile
+      description: Update user profile information
+      parameters:
+      - in: header
+        name: Authorization
         schema:
           type: string
-          default: US
         required: true
-        description: Parameter country
+        description: 'JWT Bearer token (format: Bearer <token>)'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example: &id004
+                message: Hello world!
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example: *id004
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example: *id004
+        '401':
+          description: Unauthorized - Missing or invalid authentication
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+              example:
+                msg: Missing Authorization Header
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - name
+              properties:
+                name:
+                  type: string
+            example:
+              name: John Doe
+        description: Request body parameters
+      security:
+      - bearerAuth: []
+    delete:
+      summary: Delete Profile
+      description: Delete user profile
+      parameters:
+      - in: header
+        name: Authorization
+        schema:
+          type: string
+        required: true
+        description: 'JWT Bearer token (format: Bearer <token>)'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example: &id005
+                message: Hello world!
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example: *id005
+        '401':
+          description: Unauthorized - Missing or invalid authentication
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+              example:
+                msg: Missing Authorization Header
+      security:
+      - bearerAuth: []
+  /api/friends/request/<int:friend_id>:
+    post:
+      summary: Send Friend Request
+      description: Send a friend request to another user
+      parameters:
+      - in: header
+        name: Authorization
+        schema:
+          type: string
+        required: true
+        description: 'JWT Bearer token (format: Bearer <token>)'
+      - name: friend_id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: 'Path parameter: friend_id'
       responses:
         '200':
           description: Successful response
@@ -90,6 +420,19 @@ paths:
                 properties:
                   error:
                     type: string
+              example:
+                error: Bad request error message
+        '401':
+          description: Unauthorized - Missing or invalid authentication
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+              example:
+                msg: Missing Authorization Header
         '500':
           description: Server error
           content:
@@ -99,11 +442,27 @@ paths:
                 properties:
                   error:
                     type: string
-  /test:
-    get:
-      summary: Test
-      description: Test endpoint that returns a message with timestamp
-      parameters: []
+              example:
+                error: Internal server error occurred
+      security:
+      - bearerAuth: []
+  /api/friends/accept/<int:user_id>:
+    put:
+      summary: Accept Friend Request
+      description: Accept a friend request
+      parameters:
+      - in: header
+        name: Authorization
+        schema:
+          type: string
+        required: true
+        description: 'JWT Bearer token (format: Bearer <token>)'
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: 'Path parameter: user_id'
       responses:
         '200':
           description: Successful response
@@ -111,11 +470,58 @@ paths:
             application/json:
               schema:
                 type: object
-  /health:
-    get:
-      summary: Health Check
-      description: Check the health of the application by verifying database connectivity.
-      parameters: []
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: Bad request error message
+        '401':
+          description: Unauthorized - Missing or invalid authentication
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+              example:
+                msg: Missing Authorization Header
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: Internal server error occurred
+      security:
+      - bearerAuth: []
+  /api/friends/reject/<int:friend_id>:
+    put:
+      summary: Reject Friend Request
+      description: Reject a friend request
+      parameters:
+      - in: header
+        name: Authorization
+        schema:
+          type: string
+        required: true
+        description: 'JWT Bearer token (format: Bearer <token>)'
+      - name: friend_id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: 'Path parameter: friend_id'
       responses:
         '200':
           description: Successful response
@@ -123,3 +529,117 @@ paths:
             application/json:
               schema:
                 type: object
+        '401':
+          description: Unauthorized - Missing or invalid authentication
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+              example:
+                msg: Missing Authorization Header
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: Internal server error occurred
+      security:
+      - bearerAuth: []
+  /api/friends:
+    get:
+      summary: Get Friends List
+      description: Get list of friends
+      parameters:
+      - in: header
+        name: Authorization
+        schema:
+          type: string
+        required: true
+        description: 'JWT Bearer token (format: Bearer <token>)'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          description: Unauthorized - Missing or invalid authentication
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+              example:
+                msg: Missing Authorization Header
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: Internal server error occurred
+      security:
+      - bearerAuth: []
+  /api/friends/<int:friend_id>:
+    delete:
+      summary: Unfriend
+      description: Remove a friend
+      parameters:
+      - in: header
+        name: Authorization
+        schema:
+          type: string
+        required: true
+        description: 'JWT Bearer token (format: Bearer <token>)'
+      - name: friend_id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: 'Path parameter: friend_id'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          description: Unauthorized - Missing or invalid authentication
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+              example:
+                msg: Missing Authorization Header
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: Internal server error occurred
+      security:
+      - bearerAuth: []

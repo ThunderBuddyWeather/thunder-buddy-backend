@@ -6,13 +6,13 @@ services:
     env_file:
       - ${ENV_FILE:-.env.local}
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-postgres}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-localdev}
+      POSTGRES_DB: thunderbuddy
+      POSTGRES_USER: thunderbuddy
+      POSTGRES_PASSWORD: localdev
     ports:
       - "5432:5432"
     volumes:
-      - thunder_buddy_postgres_15:/var/lib/postgresql/data
+      - thunder_buddy_postgres_15_new:/var/lib/postgresql/data
       - ./docker/db/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - thunder-buddy-network
@@ -56,8 +56,8 @@ services:
       start_period: 10s
 
 volumes:
-  thunder_buddy_postgres_15:
-    name: thunder_buddy_postgres_15
+  thunder_buddy_postgres_15_new:
+    name: thunder_buddy_postgres_15_new
   thunder_buddy_static:
     name: thunder_buddy_static
 

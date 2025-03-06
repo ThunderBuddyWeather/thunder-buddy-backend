@@ -114,9 +114,9 @@ class ThunderBuddySetup:
         # Install development requirements if they exist
         if Path("requirements-dev.txt").exists():
             print("  ↪ Installing development packages from requirements-dev.txt...")
-            self._run_venv_command([
-                "-m", "pip", "install", "-r", "requirements-dev.txt"
-            ])
+            self._run_venv_command(
+                ["-m", "pip", "install", "-r", "requirements-dev.txt"]
+            )
         print("  ✅ Dependencies installed successfully!")
 
     def _setup_auto_activation(self):
@@ -173,7 +173,7 @@ class ThunderBuddySetup:
         else:
             print('    For bash: eval "$(direnv hook bash)"')
             print('    For zsh: eval "$(direnv hook zsh)"')
-            print('    For fish: direnv hook fish | source')
+            print("    For fish: direnv hook fish | source")
 
     def _setup_direnv(self):
         """Set up direnv for automatic virtual environment activation."""
@@ -217,15 +217,18 @@ class ThunderBuddySetup:
         settings_path = vscode_dir / "settings.json"
         if not settings_path.exists():
             with open(settings_path, "w") as f:
-                f.write('{\n')
-                f.write('    "python.defaultInterpreterPath": "{0}",\n'.format(
-                    self.python_executable))
+                f.write("{\n")
+                f.write(
+                    '    "python.defaultInterpreterPath": "{0}",\n'.format(
+                        self.python_executable
+                    )
+                )
                 f.write('    "python.terminal.activateEnvironment": true,\n')
                 f.write('    "python.linting.enabled": true,\n')
                 f.write('    "python.linting.pylintEnabled": true,\n')
                 f.write('    "python.linting.flake8Enabled": true,\n')
                 f.write('    "python.formatting.provider": "black"\n')
-                f.write('}\n')
+                f.write("}\n")
         print("  ✅ IDE integration configured!")
 
     def _run_venv_command(self, args):
@@ -270,20 +273,15 @@ def main():
         description="Set up ThunderBuddy development environment"
     )
     parser.add_argument(
-        "--force",
-        action="store_true",
-        help="Force recreation of virtual environment"
+        "--force", action="store_true", help="Force recreation of virtual environment"
     )
     parser.add_argument(
         "--no-auto-activate",
         action="store_true",
-        help="Skip setting up automatic activation"
+        help="Skip setting up automatic activation",
     )
     args = parser.parse_args()
-    setup = ThunderBuddySetup(
-        force=args.force,
-        auto_activate=not args.no_auto_activate
-    )
+    setup = ThunderBuddySetup(force=args.force, auto_activate=not args.no_auto_activate)
     setup.run()
 
 

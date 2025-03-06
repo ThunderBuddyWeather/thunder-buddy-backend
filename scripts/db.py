@@ -41,11 +41,11 @@ def get_engine() -> Engine:
         _engine = create_engine(
             database_url,
             poolclass=QueuePool,
-            pool_size=5,                # Default connection pool size
-            max_overflow=10,            # Allow up to 10 connections to overflow
-            pool_timeout=30,            # Wait up to 30 seconds for a connection
-            pool_recycle=1800,          # Recycle connections after 30 minutes
-            pool_pre_ping=True,         # Verify connections before using them
+            pool_size=5,  # Default connection pool size
+            max_overflow=10,  # Allow up to 10 connections to overflow
+            pool_timeout=30,  # Wait up to 30 seconds for a connection
+            pool_recycle=1800,  # Recycle connections after 30 minutes
+            pool_pre_ping=True,  # Verify connections before using them
         )
 
         logger.info("Database engine initialized with connection pooling")

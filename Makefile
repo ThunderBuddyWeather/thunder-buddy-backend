@@ -55,9 +55,7 @@ test-integration:
 
 # Run linting
 lint:
-	flake8 .
-	pylint --ignore=venv,env,.venv,.env,build,dist --rcfile=.pylintrc **/*.py
-	flake8 .
+	flake8 --config=.flake8 .
 	pylint --ignore=venv,env,.venv,.env,build,dist --rcfile=.pylintrc **/*.py
 
 # Auto-fix linting issues where possible
@@ -67,7 +65,17 @@ lint-fix:
 
 # Run tests with coverage
 coverage:
-	python -m pytest --cov=. tests/ --cov-report=html
+	@echo "Checking if database is running..."
+	@if ! docker ps | grep -q thunder-buddy-db; then \
+		echo "Starting database container for tests..."; \
+		docker-compose up -d db; \
+		echo "Waiting for database to be ready..."; \
+		sleep 5; \
+	else \
+		echo "Database container is already running."; \
+	fi
+	@echo "Running tests with coverage report..."
+	PYTHONPATH=. DATABASE_URL="postgresql://thunderbuddy:localdev@localhost:5432/thunderbuddy" python -m pytest --cov=app --cov=run tests/ --cov-report=html
 
 # Clean up Python artifacts
 clean:

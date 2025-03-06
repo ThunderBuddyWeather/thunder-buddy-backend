@@ -22,7 +22,8 @@ COPY .env.ci .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application files first
-COPY main.py .
+COPY run.py .
+COPY app/ app/
 COPY scripts/ scripts/
 COPY tests/ tests/
 
@@ -84,7 +85,7 @@ RUN echo '#!/bin/sh\n\
   echo "Generating swagger.yaml..."\n\
   python scripts/generate_swagger.py\n\
   fi\n\
-  exec python main.py\n' > /app/entrypoint.sh && \
+  exec python run.py\n' > /app/entrypoint.sh && \
   chmod +x /app/entrypoint.sh
 
 # Set the container's entrypoint to our new script
