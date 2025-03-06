@@ -22,8 +22,8 @@ def save_friendship():
 
 
 def get_friendship(user1_id, user2_id):
-    account = Friendship.query.filter(
-        Friendship.user1_id == user1_id, Friendship.user2_id == user2_id
+    account = Friendship.query.filter_by(
+        user1_id == user1_id, user2_id == user2_id
     ).first()
     if account is None:
         return jsonify({"message": "Friendship not found"}), 404
@@ -42,8 +42,8 @@ def get_friendship(user1_id, user2_id):
 
 
 def update_friendship(user1_id, user2_id):
-    account = Friendship.query.filter(
-        Friendship.user1_id == user1_id, Friendship.user2_id == user2_id
+    account = Friendship.query.filter_by(
+        user1_id == user1_id, user2_id == user2_id
     ).first()
     if account is None:
         return jsonify({"message": "Friendship not found"}), 404
@@ -60,8 +60,8 @@ def update_friendship(user1_id, user2_id):
 
 
 def delete_friendship(user1_id, user2_id):
-    account = Friendship.query.filter(
-        Friendship.user1_id == user1_id, Friendship.user2_id == user2_id
+    account = Friendship.query.filter_by(
+        user1_id == user1_id, user2_id == user2_id
     ).first()
     if account is None:
         return jsonify({"message": "Friendship not found"}), 404

@@ -18,6 +18,7 @@ def save_user_account():
             "user_address",
             "user_location",
             "user_weather",
+            "user_severe_weather_alert",
             "user_profile_picture",
         ]
 
@@ -33,6 +34,7 @@ def save_user_account():
             user_address=data["user_address"],
             user_location=data["user_location"],
             user_weather=data["user_weather"],
+            user_severe_weather_alert=data["user_severe_weather_alert"],
             user_profile_picture=data["user_profile_picture"],
         )
 
@@ -61,6 +63,7 @@ def get_user_account(user_id):
                     "user_address": account.user_address,
                     "user_location": account.user_location,
                     "user_weather": account.user_weather,
+                    "user_severe_weather_alert": account.user_severe_weather_alert,
                     "user_profile_picture": account.user_profile_picture,
                     "user_time_created": account.user_time_created.strftime(
                         "%Y-%m-%d %H:%M:%S"
@@ -83,6 +86,7 @@ def _update_account_fields(account, data):
         "user_address": "user_address",
         "user_location": "user_location",
         "user_weather": "user_weather",
+        "user_severe_weather_alert": "user_severe_weather_alert",
         "user_profile_picture": "user_profile_picture",
     }
 

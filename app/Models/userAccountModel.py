@@ -16,7 +16,8 @@ class UserAccount(db.Model):
     user_phone = db.Column(db.String(20))
     user_address = db.Column(db.String(200))
     user_location = db.Column(db.String(100))
-    user_weather = db.Column(db.String(100))
+    user_weather = db.Column(db.String(200))
+    user_severe_weather_alert = db.Column(db.String(200))
     user_profile_picture = db.Column(db.String(255))
     user_time_created = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
 
@@ -30,6 +31,7 @@ class UserAccount(db.Model):
         user_address=None,
         user_location=None,
         user_weather=None,
+        user_severe_weather_alert=None,
         user_profile_picture=None,
     ):
         self.user_username = user_username
@@ -40,4 +42,5 @@ class UserAccount(db.Model):
         self.user_address = user_address or ""
         self.user_location = user_location or ""
         self.user_weather = user_weather or ""
+        self.user_severe_weather_alert = user_severe_weather_alert or ""
         self.user_profile_picture = user_profile_picture or ""

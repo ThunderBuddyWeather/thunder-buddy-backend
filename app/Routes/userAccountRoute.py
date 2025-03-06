@@ -112,6 +112,7 @@ def register() -> Tuple[Response, int]:
             user_address=data.get("address", ""),
             user_location=data.get("location", ""),
             user_weather=data.get("weather", ""),
+            user_severe_weather=data.get("severe_weather", ""),
             user_profile_picture=data.get("profile_picture", ""),
         )
 
@@ -200,6 +201,8 @@ def get_profile() -> Tuple[Response, int]:
                     "address": user.user_address,
                     "location": user.user_location,
                     "weather": user.user_weather,
+                    "severe_weather": user.user_severe_weather,
+                    "created_at": user.user_created_at,
                     "profile_picture": user.user_profile_picture,
                 }
             ),
@@ -235,6 +238,7 @@ def update_profile() -> Tuple[Response, int]:
             "address",
             "location",
             "weather",
+            "severe_weather",
             "profile_picture",
         }
         invalid_fields = set(data.keys()) - allowed_fields
