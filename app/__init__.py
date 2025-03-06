@@ -8,7 +8,7 @@ from flask_limiter.util import get_remote_address
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
-from flask_swagger_ui import get_swaggerui_blueprint
+from flask_swagger_ui import get_swaggerui_blueprint  # type: ignore
 
 from .config import DevelopmentConfig, ProductionConfig, TestingConfig
 from .extensions import caching, db, limiter, ma
@@ -21,7 +21,7 @@ migrate = Migrate()
 jwt = JWTManager()
 
 
-def create_app(config_name):
+def create_app(config_name: str) -> Flask:
     app = Flask(__name__, static_url_path="/static", static_folder="../static")
     load_dotenv()
 
@@ -67,7 +67,7 @@ def create_app(config_name):
 
     app.register_blueprint(user_account_blueprint, url_prefix="/api/user")
     app.register_blueprint(friendship_blueprint, url_prefix="/api/friends")
-    
+
     # Only register dev routes in development mode
     if config_name == "development":
         app.register_blueprint(dev_blueprint, url_prefix="/dev")

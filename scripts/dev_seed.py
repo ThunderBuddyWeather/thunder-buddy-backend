@@ -64,7 +64,7 @@ def generate_users(count=50):
     used_usernames = set()
     used_emails = set()
     
-    for i in range(count):
+    for _ in range(count):
         # Generate unique username and email
         while True:
             username = fake.user_name() + str(random.randint(1, 999))
@@ -78,9 +78,12 @@ def generate_users(count=50):
         zip_code, location = random.choice(US_ZIP_CODES)
         
         # Generate a simple phone number format to avoid DB constraint errors
-        phone_number = f"{random.randint(100, 999)}-{random.randint(100, 999)}-{random.randint(1000, 9999)}"
+        phone_number = (
+            f"{random.randint(100, 999)}-{random.randint(100, 999)}-"
+            f"{random.randint(1000, 9999)}"
+        )
         
-        # Create user with generated data - using the same password for all users but properly hashed
+        # Create user with generated data - all users use same hashed password
         user = UserAccount(
             user_username=username,
             user_password=generate_password_hash(DEFAULT_PASSWORD),
@@ -90,7 +93,10 @@ def generate_users(count=50):
             user_address=f"{fake.street_address()}, {location} {zip_code}",
             user_location=location,
             user_weather="",  # Weather will be determined by the application
-            user_profile_picture=f"https://randomuser.me/api/portraits/{random.choice(['men', 'women'])}/{random.randint(1, 99)}.jpg"
+            user_profile_picture=(
+                f"https://randomuser.me/api/portraits/"
+                f"{random.choice(['men', 'women'])}/{random.randint(1, 99)}.jpg"
+            )
         )
         users.append(user)
     
@@ -108,7 +114,7 @@ def create_friendships(users):
     for user in users:
         # Skip if user ID is None (not yet committed to database)
         if user.user_id is None:
-            logger.warning(f"Skipping friendship creation for user with no ID")
+            logger.warning("Skipping friendship creation for user with no ID")
             continue
             
         # Determine number of friends for this user (4-10)
@@ -116,9 +122,8 @@ def create_friendships(users):
         
         # Get random friends - excluding self
         potential_friend_ids = [uid for uid in user_ids if uid != user.user_id]
-        if len(potential_friend_ids) < num_friends:
-            num_friends = len(potential_friend_ids)
-            
+        num_friends = min(num_friends, len(potential_friend_ids))
+        
         friend_ids = random.sample(potential_friend_ids, num_friends)
         
         # Create friendship relationships
@@ -215,8 +220,11 @@ def seed_development_data():
         logger.info("Committing friendships to database...")
         db.session.commit()
         
-        logger.info(f"Development data seeding completed. Created {len(users)} users and {len(friendships)} friendships.")
+        logger.info(
+            f"Development data seeding completed. Created {len(users)} users and "
+            f"{len(friendships)} friendships."
+        )
 
 
 if __name__ == "__main__":
-    seed_development_data() 
+    seed_development_data()

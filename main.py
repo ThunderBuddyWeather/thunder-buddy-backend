@@ -37,11 +37,13 @@ app = Flask(__name__)
 if get_swaggerui_blueprint:
     app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
 
+
 # Add a route to serve swagger.yaml with the correct MIME type
 @app.route('/static/swagger.yaml')
 def serve_swagger():
     """Serve the swagger.yaml file with the correct MIME type"""
     return send_from_directory('static', 'swagger.yaml', mimetype='application/yaml')
+
 
 load_dotenv()
 
