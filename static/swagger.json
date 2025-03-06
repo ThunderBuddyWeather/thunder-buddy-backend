@@ -476,6 +476,24 @@
               }
             }
           },
+          "204": {
+            "description": "No content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "message": "Hello world!"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Server error",
             "content": {
@@ -584,6 +602,24 @@
               }
             }
           },
+          "204": {
+            "description": "No content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "message": "Hello world!"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Server error",
             "content": {
@@ -626,6 +662,61 @@
             "bearerAuth": []
           }
         ]
+      }
+    },
+    "/users": {
+      "get": {
+        "summary": "List All Users",
+        "description": "List all users in the system - DEV MODE ONLY",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "message": "Hello world!"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "message": "Hello world!"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/friends/request/<int:friend_id>": {
