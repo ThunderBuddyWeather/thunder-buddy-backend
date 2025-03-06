@@ -83,6 +83,7 @@ def auth_headers(app):
     return _auth_headers
 
 
+@pytest.mark.regression
 def test_register_success(client):
     """Test successful user registration"""
     response = client.post(
@@ -166,6 +167,7 @@ def test_register_database_error(client, app):
             assert "Failed to create user account" in response.json["message"]
 
 
+@pytest.mark.regression
 def test_login_success(client, test_user):
     """Test successful login"""
     response = client.post(
@@ -216,6 +218,7 @@ def test_login_database_error(client, app):
 
 
 @skip_in_ci
+@pytest.mark.regression
 def test_get_profile_success(client, test_user, auth_headers):
     """Test successful profile retrieval"""
     headers = auth_headers(test_user)

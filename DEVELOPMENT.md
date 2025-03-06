@@ -7,7 +7,7 @@ This guide explains how to run the Thunder Buddy API in development mode with au
 To start the application in development mode with auto-reload:
 
 ```bash
-./dev.sh
+./start-dev.sh
 ```
 
 This script:
@@ -22,7 +22,7 @@ The following scripts are available for development:
 
 | Script | Description |
 |--------|-------------|
-| `./dev.sh` | Start the application in development mode with auto-reload |
+| `./start-dev.sh` | Start the application in development mode with auto-reload |
 | `./restart-dev.sh` | Stop running containers and restart in development mode |
 | `./rebuild-dev.sh` | Rebuild Docker images from scratch and restart in development mode |
 | `./stop.sh` | Stop all running containers |

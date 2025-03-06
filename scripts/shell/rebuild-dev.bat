@@ -20,7 +20,7 @@ echo Building Docker images from scratch (no cache)...
 docker compose build --no-cache app
 
 REM Start containers in development mode
-echo Starting in development mode with auto-reload...
-call %~dp0dev.bat
+echo Starting in development mode...
+call %~dp0start-dev.bat
 
 endlocal 

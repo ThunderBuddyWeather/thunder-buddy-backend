@@ -6,7 +6,8 @@ Creates 50 default users with 4-10 random friends each from different US ZIP cod
 import logging
 import os
 import random
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from faker import Faker
 from werkzeug.security import generate_password_hash
@@ -17,7 +18,7 @@ from app.Models.friendshipModel import Friendship
 from app.Models.userAccountModel import UserAccount
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, 
+logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -57,14 +58,14 @@ US_ZIP_CODES = [
 ]
 
 
-def generate_users(count=50):
+def generate_users(count: int = 50) -> List[UserAccount]:
     """Generate a specified number of random users with data from different ZIP codes"""
     logger.info(f"Generating {count} random users...")
     users = []
     used_usernames = set()
     used_emails = set()
-    
-    for i in range(count):
+
+    for _ in range(count):
         # Generate unique username and email
         while True:
             username = fake.user_name() + str(random.randint(1, 999))
@@ -73,14 +74,17 @@ def generate_users(count=50):
                 used_usernames.add(username)
                 used_emails.add(email)
                 break
-        
+
         # Get random ZIP code and location
         zip_code, location = random.choice(US_ZIP_CODES)
-        
+
         # Generate a simple phone number format to avoid DB constraint errors
-        phone_number = f"{random.randint(100, 999)}-{random.randint(100, 999)}-{random.randint(1000, 9999)}"
-        
-        # Create user with generated data - using the same password for all users but properly hashed
+        phone_number = (
+            f"{random.randint(100, 999)}-{random.randint(100, 999)}-"
+            f"{random.randint(1000, 9999)}"
+        )
+
+        # Create user with generated data - all users use same hashed password
         user = UserAccount(
             user_username=username,
             user_password=generate_password_hash(DEFAULT_PASSWORD),
@@ -90,37 +94,39 @@ def generate_users(count=50):
             user_address=f"{fake.street_address()}, {location} {zip_code}",
             user_location=location,
             user_weather="",  # Weather will be determined by the application
-            user_profile_picture=f"https://randomuser.me/api/portraits/{random.choice(['men', 'women'])}/{random.randint(1, 99)}.jpg"
+            user_profile_picture=(
+                f"https://randomuser.me/api/portraits/"
+                f"{random.choice(['men', 'women'])}/{random.randint(1, 99)}.jpg"
+            )
         )
         users.append(user)
-    
+
     return users
 
 
-def create_friendships(users):
+def create_friendships(users: List[UserAccount]) -> List[Friendship]:
     """Create random friendships between users, each user having 4-10 friends"""
     logger.info("Creating random friendships between users...")
     friendships = []
-    
+
     # Create a list of user IDs for reference
     user_ids = [user.user_id for user in users]
-    
+
     for user in users:
         # Skip if user ID is None (not yet committed to database)
         if user.user_id is None:
-            logger.warning(f"Skipping friendship creation for user with no ID")
+            logger.warning("Skipping friendship creation for user with no ID")
             continue
-            
+
         # Determine number of friends for this user (4-10)
         num_friends = random.randint(4, min(10, len(users) - 1))
-        
+
         # Get random friends - excluding self
         potential_friend_ids = [uid for uid in user_ids if uid != user.user_id]
-        if len(potential_friend_ids) < num_friends:
-            num_friends = len(potential_friend_ids)
-            
+        num_friends = min(num_friends, len(potential_friend_ids))
+
         friend_ids = random.sample(potential_friend_ids, num_friends)
-        
+
         # Create friendship relationships
         for friend_id in friend_ids:
             # Ensure we don't create duplicate friendships
@@ -131,17 +137,17 @@ def create_friendships(users):
                     friendship_status=random.choice(['pending', 'accepted'])
                 )
                 friendships.append(friendship)
-    
+
     return friendships
 
 
-def save_users_to_properties_file(users):
+def save_users_to_properties_file(users: List[UserAccount]) -> bool:
     """Save the list of users to a JSON file (more compatible with shell scripts)"""
     logger.info(f"Saving {len(users)} users to JSON file: {USER_PROPERTIES_FILE}")
-    
+
     try:
         import json
-        
+
         # Create a list of user dictionaries
         user_data = []
         for user in users:
@@ -153,7 +159,7 @@ def save_users_to_properties_file(users):
                 "location": user.user_location,
                 "password": DEFAULT_PASSWORD
             })
-        
+
         # Write to JSON file
         with open(USER_PROPERTIES_FILE, 'w') as f:
             json.dump(
@@ -164,20 +170,20 @@ def save_users_to_properties_file(users):
                         "default_password": DEFAULT_PASSWORD
                     },
                     "users": user_data
-                }, 
-                f, 
+                },
+                f,
                 indent=2
             )
-        
+
         # Also write a simple text file with usernames and passwords for quick reference
         with open("user_credentials.txt", 'w') as f:
             f.write("# Thunder Buddy Generated User Credentials\n")
             f.write(f"# Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
             f.write("# Format: username,password\n\n")
-            
+
             for user in users:
                 f.write(f"{user.user_username},{DEFAULT_PASSWORD}\n")
-                
+
         logger.info(f"Successfully saved users to {USER_PROPERTIES_FILE} and user_credentials.txt")
         return True
     except Exception as e:
@@ -185,38 +191,41 @@ def save_users_to_properties_file(users):
         return False
 
 
-def seed_development_data():
+def seed_development_data() -> None:
     """Main function to seed development data"""
     logger.info("Starting development data seeding...")
     app = create_app("development")
-    
+
     with app.app_context():
         # Check if we already have users (avoid duplicating seed data)
         existing_users = UserAccount.query.count()
         if existing_users >= 50:
             logger.info(f"Database already has {existing_users} users. Skipping seeding.")
             return
-            
+
         logger.info("Creating users...")
         users = generate_users(50)
         db.session.add_all(users)
-        
+
         # Commit users to the database to get their IDs before creating friendships
         logger.info("Committing users to database...")
         db.session.commit()
-        
+
         # Save users to properties file after they've been committed to get their IDs
         save_users_to_properties_file(users)
-        
+
         logger.info("Creating friendships...")
         friendships = create_friendships(users)
         db.session.add_all(friendships)
-        
+
         logger.info("Committing friendships to database...")
         db.session.commit()
-        
-        logger.info(f"Development data seeding completed. Created {len(users)} users and {len(friendships)} friendships.")
+
+        logger.info(
+            f"Development data seeding completed. Created {len(users)} users and "
+            f"{len(friendships)} friendships."
+        )
 
 
 if __name__ == "__main__":
-    seed_development_data() 
+    seed_development_data()

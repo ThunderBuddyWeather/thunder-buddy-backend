@@ -1,12 +1,14 @@
-from flask import jsonify, request
+from typing import Any, Dict, Tuple
+
+from flask import Response, jsonify, request
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.security import generate_password_hash
 
-from ..extensions import db
-from ..Models.userAccountModel import UserAccount
+from app.extensions import db
+from app.Models.userAccountModel import UserAccount
 
 
-def save_user_account():
+def save_user_account() -> Tuple[Response, int]:
     try:
         data = request.get_json()
         required_fields = [
@@ -46,7 +48,7 @@ def save_user_account():
         return jsonify({"message": f"Database error: {str(e)}"}), 500
 
 
-def get_user_account(user_id):
+def get_user_account(user_id: int) -> Tuple[Response, int]:
     try:
         account = UserAccount.query.filter_by(user_id=user_id).first()
         if account is None:
@@ -76,7 +78,7 @@ def get_user_account(user_id):
         return jsonify({"message": f"Database error: {str(e)}"}), 500
 
 
-def _update_account_fields(account, data):
+def _update_account_fields(account: UserAccount, data: Dict[str, Any]) -> UserAccount:
     """Helper function to update user account fields from data dictionary."""
     field_mapping = {
         "user_username": "user_username",
@@ -102,7 +104,7 @@ def _update_account_fields(account, data):
     return account
 
 
-def update_user_account(user_id):
+def update_user_account(user_id: int) -> Tuple[Response, int]:
     try:
         # Fetch the account
         account = UserAccount.query.filter_by(user_id=user_id).first()
@@ -125,7 +127,7 @@ def update_user_account(user_id):
         return jsonify({"message": f"Database error: {str(e)}"}), 500
 
 
-def delete_user_account(user_id):
+def delete_user_account(user_id: int) -> Tuple[Response, int]:
     try:
         account = UserAccount.query.filter_by(user_id=user_id).first()
         if account is None:

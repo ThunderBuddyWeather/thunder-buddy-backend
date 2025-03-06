@@ -66,6 +66,14 @@ done < .env.local
 
 # Start the containers
 docker compose down
-docker compose up -d
+
+# Use platform-specific run for Apple Silicon Macs
+if [[ "$(uname -s)" == "Darwin" && "$(uname -m)" == "arm64" ]]; then
+    echo "Detected Apple Silicon (ARM64), using native platform..."
+    # Ensure we're using the same image name that was built
+    DOCKER_DEFAULT_PLATFORM=linux/arm64 docker compose up -d
+else
+    docker compose up -d
+fi
 
 echo "Thunder Buddy is now running on http://localhost:$HOST_PORT" 

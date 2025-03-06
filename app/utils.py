@@ -1,6 +1,7 @@
 import os
 from datetime import datetime, timedelta, timezone
 from functools import wraps
+from typing import Any, Callable, TypeVar, cast
 
 import jwt
 from dotenv import load_dotenv
@@ -10,12 +11,12 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
 
 
-def get_remote_address():
+def get_remote_address() -> str:
     """Get the remote address of the request"""
     return request.remote_addr or "127.0.0.1"
 
 
-def encode_token(user_id):
+def encode_token(user_id: int) -> str:
     """Generate JWT token for user"""
     payload = {
         "exp": datetime.now(timezone.utc) + timedelta(days=1),
@@ -26,9 +27,9 @@ def encode_token(user_id):
     return token
 
 
-def token_required(f):
+def token_required(f: Callable) -> Callable:
     @wraps(f)
-    def decorated(*args, **kwargs):
+    def decorated(*args: Any, **kwargs: Any) -> Any:
         token = None
         if "Authorization" in request.headers:
             auth_header = request.headers["Authorization"]
@@ -42,7 +43,7 @@ def token_required(f):
 
         try:
             payload = jwt.decode(
-                token, current_app.config["SECRET_KEY"], algorithms="HS256"
+                token, current_app.config["SECRET_KEY"], algorithms=["HS256"]
             )
             # 'current_user_id' is assigned but not used, just decode the token to validate it
             _ = int(payload["sub"])

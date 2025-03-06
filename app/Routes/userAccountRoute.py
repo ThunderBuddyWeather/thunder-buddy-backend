@@ -9,14 +9,14 @@ from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_requir
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from ..Controllers.userAccountController import (
+from app.Controllers.userAccountController import (
     delete_user_account,
     get_user_account,
     save_user_account,
     update_user_account,
 )
-from ..extensions import caching, db, limiter
-from ..Models.userAccountModel import UserAccount
+from app.extensions import caching, db, limiter
+from app.Models.userAccountModel import UserAccount
 
 user_account_blueprint = Blueprint("user_account", __name__)
 
@@ -261,7 +261,7 @@ def update_profile() -> Tuple[Response, int]:
 
             db.session.commit()
             logger.info(f"Successfully updated profile for user ID: {user_id}")
-            return "", 204
+            return jsonify({}), 204
 
         except SQLAlchemyError as e:
             logger.error(f"Database error during profile update: {str(e)}")
@@ -289,7 +289,7 @@ def delete_profile() -> Tuple[Response, int]:
             db.session.delete(user)
             db.session.commit()
             logger.info(f"Successfully deleted user ID: {user_id}")
-            return "", 204
+            return jsonify({}), 204
 
         except SQLAlchemyError as e:
             logger.error(f"Database error during profile deletion: {str(e)}")

@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 
 from sqlalchemy.orm import relationship
 
-from ..extensions import db
+from app.extensions import db
 
 
 class UserAccount(db.Model):
