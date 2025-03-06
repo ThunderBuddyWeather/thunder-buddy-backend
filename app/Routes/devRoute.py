@@ -1,6 +1,7 @@
 """Development-only routes blueprint"""
 
 import logging
+from datetime import datetime
 from typing import Dict, List, Tuple
 
 from flask import Blueprint, Response, current_app, jsonify
@@ -73,3 +74,26 @@ def list_all_users() -> Tuple[Response, int]:
     except Exception as e:
         logger.error(f"Error retrieving users: {str(e)}")
         return jsonify({"message": "Error retrieving users"}), 500
+
+
+@dev_blueprint.route("/test", methods=["GET"])
+def test_endpoint() -> Tuple[Response, int]:
+    """
+    Test endpoint that returns a message with timestamp
+    This endpoint is only available in development mode.
+    """
+    # Check if we're in development mode - if not, return 404
+    if not current_app.debug:
+        logger.warning("Attempted to access dev-only endpoint in non-debug mode")
+        return jsonify({"message": "Not Found"}), 404
+    
+    # Create response data
+    response_data = {
+        "message": "Auto-reload is working perfectly!",
+        "timestamp": datetime.now().isoformat(),
+        "auto_reload": "Test successful",
+        "environment": "development"
+    }
+    
+    # Return the response
+    return jsonify(response_data), 200

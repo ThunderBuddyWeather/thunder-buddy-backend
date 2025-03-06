@@ -4,6 +4,7 @@
 
 services:
   app:
+    restart: unless-stopped
     volumes:
       # Mount application code for auto-reload
       - ./app:/app/app
@@ -19,5 +20,5 @@ services:
     # For development, we want to see logs immediately
     tty: true
     stdin_open: true
-    # Command override to ensure reloader is enabled
-    command: python run.py
+    # Command override to use watchdog script
+    command: python scripts/run_with_watchdog.py
