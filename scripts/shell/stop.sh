@@ -1,4 +1,6 @@
 #!/bin/bash
+# Stop Docker containers
+# This script stops all Docker containers defined in the docker-compose.yml file
 
 # Source environment variables to ensure proper container names
 if [ -f .env.local ]; then
