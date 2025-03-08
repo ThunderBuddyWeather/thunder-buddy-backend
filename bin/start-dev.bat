@@ -1,6 +1,16 @@
 @echo off
-REM Launcher script for start-dev.bat
-REM This script is maintained for backward compatibility
+:: Launcher script for start-dev.bat
+:: This script is maintained for backward compatibility
+::
+:: ARCHITECTURE INFO:
+:: This is a wrapper script that provides a simple entry point in the bin/ directory.
+:: The actual implementation resides in scripts/shell/start-dev.bat.
+:: 
+:: This separation allows:
+:: - Consistent user interface through the bin/ directory
+:: - Platform-specific implementations (.sh, .bat, .ps1)
+:: - Better organization and maintainability
+:: - Backward compatibility if implementation details change
 
-REM Execute the actual script from the scripts/shell directory
-call "%~dp0scripts\shell\start-dev.bat" %* 
+:: Execute the actual implementation in scripts/shell directory
+"%~dp0..\scripts\shell\start-dev.bat" %* 
