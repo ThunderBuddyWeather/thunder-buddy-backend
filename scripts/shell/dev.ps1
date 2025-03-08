@@ -1,3 +1,16 @@
+# PowerShell script for Thunder Buddy development actions
+# 
+# ARCHITECTURE INFO:
+# This is an implementation script that lives in the scripts/shell directory.
+# It can be called directly or via a wrapper script from the bin/ directory.
+# 
+# This architecture allows:
+# - Implementation details to be separated from user-facing scripts
+# - Cross-platform support via different implementations (.sh, .bat, .ps1)
+# - Better organization and maintainability
+# - Changes to implementation without affecting the user interface
+#
+
 # PowerShell script to start Thunder Buddy in development mode with auto-reload
 $ErrorActionPreference = "Stop"
 
